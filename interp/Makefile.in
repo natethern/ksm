@@ -1,0 +1,55 @@
+#  Makefile for KSM-Scheme
+
+#  Copyright (C) 2000 - 2001 Hangil Chang
+
+#  This file is part of KSM-Scheme, Kit for Scheme Manipulation Scheme.
+#  
+#  KSM-Scheme is free software; you can distribute it and/or modify it
+#  under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2, or (at your option)
+#  any later version.
+ 
+#  KSM-Scheme is distributed in the hope that it will be useful, but
+#  WITHOUT ANY WARRANTY; without even implied warranty of MERCHANTABILITY
+#  or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public
+#  License for more details.
+
+#  You should have received a copy of the GNU General Public License
+#  along with KSM-Scheme; see the file COPYING. If not, write to the
+#  Free Software Foundation, 59 Temple Place, Suite 330, Boston,
+#  MA 02111 USA.                                                   
+
+object = object.o error.o special.o init.o print.o key.o read.o \
+         toplevel.o eval.o cons.o env.o blt.o quote.o lambda.o \
+         define.o port.o perm.o jumps.o dywin.o cont.o syntax.o \
+         equal.o delay.o vector.o number.o int.o double.o load.o \
+         mpz.o mpq.o complex.o strbuf.o \
+         qq.o char.o string.o utf8.o charset.o unicode.o \
+         numio.o sharp.o callwv.o cready.o ext.o path.o readline.o \
+         blt_cond.o blt_cons.o blt_math.o blt_pair.o blt_io.o \
+         blt_misc.o keyword.o except.o bufport.o
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+dst_base = $(prefix)/ksm/ksm-$(ksm_ver)
+
+CFLAGS = -Wall -g -Wno-format -D_GNU_SOURCE -I../include @cdef@
+
+progname = ksm-$(ksm_ver)
+KSMPROG = $(dst_base)/interp/$(progname)
+
+all: ksm-$(ksm_ver) ksm
+
+$(progname): $(object) main.o
+	gcc -o $@ -Wl,-E $(object) main.o @libs@ -lm -ldl
+
+ksm: ksm.c
+	gcc -o $@ ksm.c -DKSMPROG=\"$(KSMPROG)\"
+
+clean:
+	rm -f *~ *.o ksm core $(progname)
+
+install:
+	install -D $(progname) $(dst_base)/interp/$(progname)
+	install -D ksm $(bindir)/ksm

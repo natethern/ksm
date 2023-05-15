@@ -1,0 +1,3 @@
+rename utf8_regcomp --> ksm_utf8_regcomp, ...  in regex package
+cast operator
+

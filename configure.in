@@ -1,0 +1,42 @@
+AC_INIT(init.scm)
+
+AC_PATH_PROG(INSTALL_INFO, install-info, /sbin/install-info,
+$PATH:/sbin:/usr/sbin:/usr/local/sbin)
+AC_SUBST(INSTALL_INFO)
+
+AC_CHECK_HEADERS(gmp.h, have_gmp_h=yes, have_gmp_h=no)
+AC_CHECK_LIB(gmp, main, have_libgmp=yes, have_libgmp=no)
+AC_ARG_WITH(gmp, 
+[  --without-gmp              do not use GMP library], 
+            use_gmp=$withval, use_gmp=yes)
+if test "$use_gmp" != no; then
+  if test $have_gmp_h = yes ; then
+    if test $have_libgmp = yes; then
+      cdef="$cdef -DHAVE_GMP_H=1 -DHAVE_LIBGMP=1"
+      libs="$libs -lgmp"
+    fi
+  fi
+fi
+
+AC_CHECK_HEADERS(pthread.h, have_pthread_h=yes, have_pthread_h=no)
+AC_CHECK_LIB(pthread, main, have_libpthread=yes, have_libpthread=no)
+AC_ARG_WITH(pthread, 
+[  --without-pthread          do not use PTHREAD library],
+  use_pthread=$withval, use_pthread=yes)
+if test "$use_pthread" != no; then
+  if test $have_pthread_h = yes; then
+    if test $have_libpthread = yes; then
+      cdef="$cdef -DHAVE_PTHREAD_H=1 -DHAVE_LIBPTHREAD=1"
+      libs="$libs -lpthread"
+    fi
+  fi
+fi
+
+AC_SUBST(cdef)
+AC_SUBST(libs)
+
+ksm_ver="0.3.2"
+AC_SUBST(ksm_ver)
+
+AC_OUTPUT(Makefile interp/Makefile base/Makefile thread/Makefile \
+          clang/Makefile clike/Makefile)

@@ -1,0 +1,696 @@
+<HTML>
+<HEAD>
+<!-- Created by texi2html 1.56k from ksm.texi on 12 May 2001 -->
+
+<TITLE>KSM-Scheme Reference Manual - Thread</TITLE>
+</HEAD>
+<BODY>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_11.html">previous</A>, <A HREF="ksm_13.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+<P><HR><P>
+
+
+<H1><A NAME="SEC53" HREF="ksm_toc.html#TOC53">Thread</A></H1>
+<P>
+The thread package provides support for multithreaded programming.
+This package is based on POSIX thread library.
+
+
+<P>
+Before using functions and variables in Thread Package, following
+function call should be made to dynamically load necessary library.
+
+
+
+<PRE>
+(use 'thread)
+</PRE>
+
+
+
+<H2><A NAME="SEC54" HREF="ksm_toc.html#TOC54">Basic Thread Operations</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:create</B> <I><VAR>fun</VAR></I>
+<DD><A NAME="IDX343"></A>
+<VAR>fun</VAR> (thread function) must be a function that takes no
+arguments. <CODE>thread:create</CODE> creates and starts a new thread that
+executes <VAR>fun</VAR>. It returns a thread object that represents the new
+thread.
+
+
+<P>
+It recognizes following keyword arguments.
+
+
+<TABLE BORDER>
+
+<TR><TD>detachstate</TD>
+
+</TD><TD>
+should be 'joinable or 'detached. Chooses whether the thread is created
+in the joinable state or in the detached state.  'joinable is for
+<CODE>PTHREAD_CREATE_JOINABLE</CODE>: the thread can be joined later by
+<CODE>thread:join</CODE>. 'detached is for <CODE>PTHREAD_CREATE_DETACHED</CODE>: the
+thread cannot be joined and resources allocated to the thread is
+automatically released when <VAR>fun</VAR> returns. Default is 'joinable.
+
+</TR>
+<TR><TD>schedpolicy</TD>
+
+</TD><TD>
+should be 'other, 'rr, or 'fifo. Selects the scheduling policy for the
+thread. 'other is for <CODE>SCHED_OTHER</CODE>; 'rr is for <CODE>SCHED_RR</CODE>;
+and 'fifo is for <CODE>SCHED_FIFO</CODE>. Default is 'other.
+
+</TR>
+<TR><TD>schedparam</TD>
+
+</TD><TD>
+should be an integer. Changes the scheduling priority for the
+thread. Default is 0.
+
+</TR>
+<TR><TD>inheritsched</TD>
+
+</TD><TD>
+should be 'explicit or 'inherit. Chooses whether the scheduling policy
+and scheduling parameter for the newly created thread are determined by
+the values of <CODE>schedpolicy</CODE> or <CODE>schedparam</CODE>
+arguments. 'explicit is for <CODE>PTHREAD_EXPLICIT_SCHED</CODE>: those
+attributes are inherited from the parent thread. 'inherit is for
+<CODE>PTHREAD_INHERIT_SCHED</CODE>: those attributes determined from
+<CODE>schedpolicy</CODE> and <CODE>schedparam</CODE> arguments. Default is
+'explicit.
+
+</TR>
+<TR><TD>scope</TD>
+
+</TD><TD>
+should be 'system or 'process. Chooses the scheduling contention scope
+for the created thread. 'system is for <CODE>PTHREAD_SCOPE_SYSTEM</CODE>: the
+thread contend for CPU time with all processes running on the
+machine. 'process is for <CODE>PTHREAD_SCOPE_PROCESS</CODE>: scheduling
+contension occurs only between the threads of the running
+process. Default is 'system.
+</TR></TABLE>
+
+<P>
+Example:
+
+<PRE>
+(thread:create 
+  (lambda () 
+    (display "Thread 1")
+    (newline))
+  :detachstate 'detached)  ==&#62; #&#60;thread&#62;
+</PRE>
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX344"></A>
+Returns <CODE>#t</CODE> if <VAR>obj</VAR> is a thread object, otherwise returns
+<CODE>#f</CODE>.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:exit</B> <I><VAR>retval</VAR></I>
+<DD><A NAME="IDX345"></A>
+Terminates the execution of the calling thread. <VAR>retval</VAR> specifies
+the value that can be collected by <CODE>thread:join</CODE>.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:cancel</B> <I><VAR>thread</VAR></I>
+<DD><A NAME="IDX346"></A>
+Sends a cancellation request to <VAR>thread</VAR>. Returns an unspecified
+value.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:join</B> <I><VAR>thread</VAR></I>
+<DD><A NAME="IDX347"></A>
+Suspends the execution of the calling thread until <VAR>thread</VAR>
+terminates: that is, the thread function returns; <CODE>thread:exit</CODE> is
+called; or cancelled by <CODE>thread:cancel</CODE>. When <CODE>thread</CODE>
+terminates by cencellation, <CODE>thread:join</CODE> returns an unspecified
+value. Otherwise, it returns the value that the thread function returns
+or <CODE>thread:exit</CODE> specifies.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+
+
+<H2><A NAME="SEC55" HREF="ksm_toc.html#TOC55">Cancellation</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:setcancelstate</B> <I><VAR>state</VAR></I>
+<DD><A NAME="IDX348"></A>
+Changes the cancellation state for the calling thread -- that is,
+whether cancellation requests are ignored or not. <VAR>state</VAR> should be
+either 'enable or 'disable. 'enable is for <CODE>PTHREAD_CANCEL_ENABLE</CODE>,
+meaning that cancellation is to be enabled. 'disable is for
+<CODE>PTHREAD_CANCEL_DISABLE</CODE>, meaning that cancellation is to be
+disabled. Returns the current cancellation state ('enable or 'disable).
+
+
+
+<PRE>
+(thread:setcancelstate 'disable) ==&#62; enable
+</PRE>
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:setcanceltype</B> <I><VAR>type</VAR></I>
+<DD><A NAME="IDX349"></A>
+Changes the type of responses the type of responses to cancellation
+requests. <VAR>type</VAR> should be either 'deferred or
+'asynchronous. 'deferred is for <CODE>PTHREAD_CANCEL_DEFERRED</CODE>, to keep
+the cancellation request pending until the next cancellation
+point. 'asynchronous is for <CODE>PTHREAD_CANCEL_ASYNCHRONOUS</CODE>, to
+cancel the thread as soon as the cancellation request is
+received. Returns the current cancellation type ('deferred or
+'asynchronous).
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:testcancel</B>
+<DD><A NAME="IDX350"></A>
+Does nothing except testing for pending cancellation and executing
+it. Returns an unspecified value. Its purpose is to introduce explicit
+checks for cancellation in long sequences of codes that do not call
+cancellation point functions otherwise.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+
+
+<H2><A NAME="SEC56" HREF="ksm_toc.html#TOC56">Cleanup Handler</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:with-cleanup</B> <I><VAR>cleanup-handler</VAR> <VAR>fun</VAR></I>
+<DD><A NAME="IDX351"></A>
+Both <VAR>cleanup-handler</VAR> and <VAR>fun</VAR> must be a function that takes
+no argument. Calls <VAR>fun</VAR> with no argument. If <VAR>fun</VAR> returns,
+<CODE>thread:with-cleanup</CODE> returns that value. In this case,
+<VAR>cleanup-handler</VAR> does nothing.  If <VAR>fun</VAR> does not return (that
+is, terminated either by <CODE>thread:exit</CODE> or cancellation),
+<VAR>cleanup-handler</VAR> is called with no argument on thread termination
+and <CODE>thread:with-cleanup</CODE> never returns.
+
+
+
+<PRE>
+(define mutex (thread:make-mutex))
+(begin
+  (thread:mutex-lock mutex)
+  (thread:with-cleanup
+    (lambda () (thread:mutex-unlock mutex))
+    (lambda () (some-fun)))
+  (thread:mutex-unlock mutex))
+</PRE>
+
+<P>
+@use{thread}
+</DL>
+
+
+
+
+<H2><A NAME="SEC57" HREF="ksm_toc.html#TOC57">Mutex</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:make-mutex</B>
+<DD><A NAME="IDX352"></A>
+Returns a mutex object.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:mutex-lock</B> <I><VAR>mutex</VAR></I>
+<DD><A NAME="IDX353"></A>
+Locks the <VAR>mutex</VAR>. <VAR>mutex</VAR> should be a mutex object.  If the
+<VAR>mutex</VAR> is currently unlocked, it becomes locked and owned by the
+calling thread, and <CODE>thread:mutex-lock</CODE> returns immediately. If the
+mutex is already locked by another thread, <CODE>thread:mutex-lock</CODE>
+suspends the calling thread until the mutex is unlocked.  Returns an
+unspecified value.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:mutex-trylock</B> <I><VAR>mutex</VAR></I>
+<DD><A NAME="IDX354"></A>
+<CODE>thread:mutex-trylock</CODE> tries to lock the <VAR>mutex</VAR>. If the
+<VAR>mutex</VAR> is currently unlocked, the <VAR>mutex</VAR> is locked by the
+calling thread and <CODE>thread:mutex-trylock</CODE> returns <CODE>#t</CODE>. If the
+<VAR>mutex</VAR> is currently locked, it does not block and returns <CODE>#f</CODE>
+immediately. 
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:mutex-unlock</B> <I><VAR>mutex</VAR></I>
+<DD><A NAME="IDX355"></A>
+Unlocks the <VAR>mutex</VAR>. Returns an unspecified value.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+
+
+<H2><A NAME="SEC58" HREF="ksm_toc.html#TOC58">Condition Variable</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:make-cond</B>
+<DD><A NAME="IDX356"></A>
+Returns a condition variable object.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:cond-signal</B> <I><VAR>cond</VAR></I>
+<DD><A NAME="IDX357"></A>
+Restarts one of the threads that are waiting on the condition variable
+<VAR>cond</VAR>. If no threads are waiting on <VAR>cond</VAR>, nothing
+happens. Returns an unspecified value.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:broadcast</B> <I><VAR>cond</VAR></I>
+<DD><A NAME="IDX358"></A>
+Restarts all the threads that are waiting on the condition variable
+<VAR>cond</VAR>. Returns an unspecified value.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:cond-wait</B> <I><VAR>cond</VAR> <VAR>mutex</VAR></I>
+<DD><A NAME="IDX359"></A>
+<CODE>thread:cond-wait</CODE> atomically unlocks the <VAR>mutex</VAR> and waits for
+the condition variable <VAR>cond</VAR>. The <VAR>mutex</VAR> must be locked by the
+calling thread on entrance to <CODE>thread:cond-wait</CODE>. Before returning
+to the calling thread, <CODE>thread:cond-wait</CODE> re-acquires
+<VAR>mutex</VAR>. Returns an unspecified value.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:cond-timedwait</B> <I><VAR>cond</VAR> <VAR>mutex</VAR> <VAR>sec</VAR></I>
+<DD><A NAME="IDX360"></A>
+[<VAR>nanosec</VAR>]
+
+
+<P>
+Atomically unlocks <VAR>mutex</VAR> and waits on <VAR>cond</VAR>, as
+<VAR>thread:cond-wait</VAR> does, but it also bounds the duration of the
+wait. If <VAR>cond</VAR> has not been signaled before the time specified by
+<VAR>sec</VAR> and optional <VAR>nanosec</VAR>, <VAR>mutex</VAR> is re-acquired and
+<CODE>thread:cond-timedwait</CODE> returns <CODE>#f</CODE>. Otherwise (that is,
+<CODE>cond</CODE> is signaled) it returns <CODE>#t</CODE>.
+
+
+<P>
+The time specified by <VAR>sec</VAR> and optional <VAR>nanosec</VAR> is an
+absolute time. If <VAR>sec</VAR> and <VAR>nanosec</VAR> (if supplied) are both
+0, it corresponds to 00:00:00 GMT, January 1, 1970.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+
+
+<H2><A NAME="SEC59" HREF="ksm_toc.html#TOC59">POSIX Semaphore</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:make-sem</B> <I><VAR>value</VAR></I>
+<DD><A NAME="IDX361"></A>
+Returns a semaphore object that has an initial value of <VAR>value</VAR>.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:sem-wait</B> <I><VAR>sem</VAR></I>
+<DD><A NAME="IDX362"></A>
+Suspends the calling thread until the semaphore represented by <VAR>sem</VAR>
+has non-zero value. It then atomically decreases the semaphore value.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:sem-trywait</B> <I><VAR>sem</VAR></I>
+<DD><A NAME="IDX363"></A>
+This is a non-blocking variant of <VAR>thread:sem-wait</VAR>. If the
+semaphore count is zero, <VAR>thread:sem-trywaie</VAR> does not suspend but
+returns <CODE>#f</CODE> immediately. Otherwise the behavior is the same as
+<VAR>thread:wait-sem</VAR>. 
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:sem-post</B> <I><VAR>sem</VAR></I>
+<DD><A NAME="IDX364"></A>
+Atomically increases the value of the semaphore represented by
+<VAR>sem</VAR>. Returns an unspecified value.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:sem-getvalue</B> <I><VAR>sem</VAR></I>
+<DD><A NAME="IDX365"></A>
+Returns the value of the semaphore represented by <VAR>sem</VAR>.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+
+
+<H2><A NAME="SEC60" HREF="ksm_toc.html#TOC60">Thread-Specific Data</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:getspecific</B> <I><VAR>key</VAR></I>
+<DD><A NAME="IDX366"></A>
+<VAR>key</VAR> should be a symbol. Returns the value of thread-specific data
+associated with <VAR>key</VAR>.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:setspecific</B> <I><VAR>key</VAR> <VAR>val</VAR></I>
+<DD><A NAME="IDX367"></A>
+<VAR>key</VAR> should be a symbol. Associates <VAR>val</VAR> with <VAR>key</VAR> in the
+thread-specific data. Returns an unspecified value.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+
+
+<H2><A NAME="SEC61" HREF="ksm_toc.html#TOC61">Threads and Signal Handling</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:sigmask</B> <I><VAR>how</VAR> <VAR>newmask</VAR></I>
+<DD><A NAME="IDX368"></A>
+Changes the signal mask for the calling thread. <VAR>how</VAR> specifies how
+the signal mask is changed. If <VAR>how</VAR> is <CODE>@SIG_SETMASK</CODE>, the
+signal mask is set to <VAR>newmask</VAR>. If <VAR>how</VAR> is <CODE>@SIG_BLOCK</CODE>,
+the signals specified by <VAR>newmask</VAR> are added to the current signal
+mask. If <VAR>how</VAR> is <CODE>@SIG_UNBLOCK</CODE>, the signals specified by
+<VAR>newmask</VAR> are removed from the current signal mask.
+
+
+<P>
+<VAR>newmask</VAR> should be a signal set created and manipulated by
+signal-related functions See section <A HREF="ksm_9.html#SEC43">Signal Handling</A>.
+
+
+
+<PRE>
+(define sigset (make-sigset))
+(sigemptyset sigset)
+(sigaddset sigset @SIGINT)
+(thread:sigmask @SIG_BLOCK sigset)
+</PRE>
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:kill</B> <I><VAR>thread</VAR> <VAR>signo</VAR></I>
+<DD><A NAME="IDX369"></A>
+Sends signal number <VAR>signo</VAR> to the thread <VAR>thread</VAR>.
+
+
+
+<PRE>
+(define th (thread:create 
+             (lambda () (let loop () (loop)))))
+(thread:kill th @SIGINT)
+</PRE>
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>sigwait</B> <I><VAR>sigset</VAR></I>
+<DD><A NAME="IDX370"></A>
+Suspends the calling thread until one of the signals in <VAR>sigset</VAR> is
+delivered to the calling thread. Returns the signal number received.
+
+
+<P>
+For <CODE>thread:sigwait</CODE> to work reliably, the signals being waited for
+must be blocked in all threads, not only in the calling thread. The best
+way to achieve this is block those signals before any threads are
+created.
+
+
+
+<PRE>
+(thread:create
+  (lambda ()
+    (let ((sigset (make-sigset)))
+      (sigemptyset sigset)
+      (sigaddset sigset @SIGINT)
+      (let loop ()
+        (let ((signo (thread:sigwait sigset)))
+          (display "SIGINT received")
+          (newline)
+          (loop))))))
+</PRE>
+
+<P>
+@use{thread}
+</DL>
+
+
+
+
+<H2><A NAME="SEC62" HREF="ksm_toc.html#TOC62">Miscellaneous Thread Functions</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:self</B>
+<DD><A NAME="IDX371"></A>
+Returns the thread object for the calling thread.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:equal?</B> <I><VAR>thread1</VAR> <VAR>thread2</VAR></I>
+<DD><A NAME="IDX372"></A>
+Returns <CODE>#t</CODE> if <VAR>thread1</VAR> and <VAR>thread2</VAR> represent the same
+thread, otherwise returns <CODE>#f</CODE>.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:detach</B> <I><VAR>thread</VAR></I>
+<DD><A NAME="IDX373"></A>
+Puts the <VAR>thread</VAR> in the detached state. This guarantees that
+resources consumed by <VAR>thread</VAR> will be freed immediately when
+<VAR>thread</VAR> terminates. However, this prevents other threads from
+synchronizing on the termination of <VAR>thread</VAR> using
+<CODE>thread:join</CODE>. Returns an unspecified value.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:atfork</B> <I><VAR>prepare</VAR> <VAR>parent</VAR> <VAR>child</VAR></I>
+<DD><A NAME="IDX374"></A>
+Registers handler functions to be called just before and just after a
+new process is created with <VAR>fork</VAR>. <VAR>prepare</VAR>, <VAR>parent</VAR> ,
+and <VAR>child</VAR> should be functions that take no
+arguments. <VAR>prepare</VAR> handler will be called from the parent process,
+just before the new process is created. <VAR>parent</VAR> handler will be
+called from the parent process, just before <CODE>fork</CODE>
+returns. <VAR>child</VAR> handler will be called from the child process, just
+before <CODE>fork</CODE> returns. <CODE>thread:atfork</CODE> returns an unspecified
+value.
+
+
+<P>
+<CODE>thread:atfork</CODE> can be called several times to install several sets
+of handlers. At <CODE>fork</CODE> time, <VAR>prepare</VAR> handlers are called in
+LIFO order (last added, first called), while <VAR>parent</VAR> and
+<VAR>child</VAR> handler are called in FIFO order (first added, first
+called).
+
+
+<P>
+Internally, <CODE>thread:atfork</CODE> uses following global variables:
+@@atfork_prepare, @@atfork_parent, and @@atfork_child.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:setschedparam</B> <I><VAR>thread</VAR> <VAR>policy</VAR> <VAR>priority</VAR></I>
+<DD><A NAME="IDX375"></A>
+Sets the scheduling parameters for the thread <VAR>thread</VAR>. <VAR>policy</VAR>
+can be either @SCHED_OTHER (regular, non-reltime scheduling),
+@SCHED_RR (realtime, round-robin), or @SCHED_FIFO (realtime, first-in
+first-out). <VAR>priority</VAR> specifies the scheduling priority for the two
+realtime policies.
+
+
+<P>
+@use{thread}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>thread:getschedparam</B> <I><VAR>thread</VAR></I>
+<DD><A NAME="IDX376"></A>
+Returns the scheduling policy and scheduling priority for the thread
+<VAR>thread</VAR>. Actually, it returns a pair whose <CODE>car</CODE> is an integer
+representing the policy (@SCHED_OTHER, @SCHED_RR, or @SCHED_FIFO) and
+<CODE>cdr</CODE> is an integer representing the priority.
+
+
+
+<PRE>
+(thread:getschedparam (thread:self)) ==&#62; (0 . 0)
+</PRE>
+
+<P>
+@use{thread}
+</DL>
+
+
+<P><HR><P>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_11.html">previous</A>, <A HREF="ksm_13.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+</BODY>
+</HTML>

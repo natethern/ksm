@@ -1,0 +1,738 @@
+<HTML>
+<HEAD>
+<!-- Created by texi2html 1.56k from ksm.texi on 12 May 2001 -->
+
+<TITLE>KSM-Scheme Reference Manual - C-like Syntax</TITLE>
+</HEAD>
+<BODY>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_12.html">previous</A>, <A HREF="ksm_14.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+<P><HR><P>
+
+
+<H1><A NAME="SEC63" HREF="ksm_toc.html#TOC63">C-like Syntax</A></H1>
+
+<P>
+KSM-Scheme accepts C-like syntax to represent Scheme expressions. When
+an input begins with <CODE>(</CODE>, it is parsed as a Scheme expression as
+usual. Otherwise, it is parsed as a C-like syntax.  A line starting with
+<CODE>;</CODE> is regarded as comment in both syntax.
+
+
+
+
+<H2><A NAME="SEC64" HREF="ksm_toc.html#TOC64">Literals</A></H2>
+
+
+
+<H3><A NAME="SEC65" HREF="ksm_toc.html#TOC65">Characters</A></H3>
+
+<P>
+Character constants are written as in the standard Scheme syntax
+See section <A HREF="ksm_4.html#SEC5">Characters</A>.  This syntax is different from the standard C
+syntax. 
+
+
+
+<PRE>
+#\a          -- 'a'
+#\A          -- 'A'
+#\(          -- '('
+#\Space      -- ' '
+#\newline    -- '\n'
+#\U{0}       -- '\0'
+#\U{D}       -- '\r'
+#\U{3042}    -- Unicode 3042(hex)
+</PRE>
+
+
+
+<H3><A NAME="SEC66" HREF="ksm_toc.html#TOC66">Strings</A></H3>
+
+<P>
+Strings constants are written as in the Scheme syntax See section <A HREF="ksm_4.html#SEC6">Strings</A>.
+
+
+
+<PRE>
+"Hello, world"
+</PRE>
+
+<P>
+Following escaping sequences are supported.
+
+
+
+<PRE>
+"\""      ==&#62; "  (a string composed of a doublequote character)
+"\\"      ==&#62; \
+"\n"      ==&#62; newline
+"\r"      ==&#62; carriage return
+"\t"      ==&#62; tab
+"\U{XXXX} ==&#62; character corresponding to Unicode 
+              code value XXXX (hexadecimal)
+</PRE>
+
+<P>
+When a backslash is followed by a character that is not listed above,
+backslash looses its special meaning and represents a backslash
+character by itself. This feature is in contrast to the standard C
+syntax.
+
+
+
+<PRE>
+"\b"  ==&#62; a string composed of two characters ('\' and 'b').
+</PRE>
+
+
+
+<H3><A NAME="SEC67" HREF="ksm_toc.html#TOC67">Numbers</A></H3>
+
+<P>
+Numerical constants are represented as in the standard C syntax.
+
+
+
+<PRE>
+12345     -- decimal
+01234     -- octal
+0x1234aB  -- hexadecimal
+1.23      -- floating point
+1.23E-3   -- floating point
+</PRE>
+
+<P>
+In addition, rational numbers are represented as in the Scheme syntax.
+
+
+
+<PRE>
+1/2       -- one half
+12/345
+</PRE>
+
+<P>
+Imaginary numbers are represented by appending <CODE>i</CODE> to a real
+number.
+
+
+
+<PRE>
+1i        ( 1i * 1i = -1 )
+1.23i     
+</PRE>
+
+
+
+<H2><A NAME="SEC68" HREF="ksm_toc.html#TOC68">Declarations</A></H2>
+
+<P>
+All variables must be declared before use, as in C. The syntax of
+variable declaration is the same with C except that type specification
+part is replaced by the keyword <CODE>var</CODE>.
+
+
+
+<PRE>
+var lower, upper, step;
+var c;
+var vec[10];
+</PRE>
+
+<P>
+The last declaration declares a variable which is a vector with 10
+elements.
+
+
+<P>
+A variable may be initialized in its declaration, as in C.
+
+
+
+<PRE>
+var esc = #\\;
+var i = 0;
+var eps = 1.0e-5;
+</PRE>
+
+<P>
+If the declaration is in the toplevel (not within <CODE>{}</CODE>), the
+scope of the variable is the whole program as variables declared by
+<CODE>define</CODE> in Scheme. 
+
+
+<P>
+If the declaration is within <CODE>{}</CODE> block, the scope is within the
+block, as automatic variables in C.
+
+
+
+
+<H2><A NAME="SEC69" HREF="ksm_toc.html#TOC69">Expressions</A></H2>
+
+<P>
+All operators except <CODE>?:</CODE> are supported. Operator precedence is as
+in the standard C.
+
+
+
+
+<H3><A NAME="SEC70" HREF="ksm_toc.html#TOC70">Arithmetic Operators</A></H3>
+
+<P>
+The binary arithmetic operators are +, -, *, /, and the modulus operator
+%. Integer division yields a rational number.
+
+
+
+<PRE>
+1+2       ==&#62; 3
+1+2*3     ==&#62; 7
+(1+2)*3   ==&#62; 9
+2 / 3     ==&#62; 2/3
+</PRE>
+
+
+
+<H3><A NAME="SEC71" HREF="ksm_toc.html#TOC71">Relational and Logical Operators</A></H3>
+
+<P>
+The relational operators are &#62;, &#62;=, &#60;, &#60;=, ==, !=, &#38;&#38;, ||.
+
+
+
+<PRE>
+1&#60;2       ==&#62; #t
+2&#62;=2      ==&#62; #t
+2!=2      ==&#62;#f
+</PRE>
+
+
+
+<H3><A NAME="SEC72" HREF="ksm_toc.html#TOC72">Increment and Decrement Operators</A></H3>
+
+<P>
+Prefix ++ and -- operators and postfix ++ and -- operators are provided.
+
+
+
+<PRE>
+var x = 12;
+x++         ==&#62; 12, x becomes 13
+x = 100;
+++x         ==&#62; 101, x becomes 101
+</PRE>
+
+
+
+<H3><A NAME="SEC73" HREF="ksm_toc.html#TOC73">Bitwise Operators</A></H3>
+
+<P>
+Bitwise operators are &#38;, |, ^, &#60;&#60;, &#62;&#62;, and ~.
+
+
+
+
+<H3><A NAME="SEC74" HREF="ksm_toc.html#TOC74">Assignment Operators and Expressions</A></H3>
+
+<P>
+Syntax and semantics of assignment expression is the same as in C.
+
+
+
+<PRE>
+var x;
+x = 12       ==&#62; 12
+</PRE>
+
+<P>
+All the assignment operators (+=, -=, *=, /=, %=, &#60;&#60;=, &#62;&#62;=, &#38;=, ^=, and
+|=) are supported.
+
+
+
+
+<H3><A NAME="SEC75" HREF="ksm_toc.html#TOC75">Conditional Expressions</A></H3>
+
+<P>
+The conditional expression, written with the ternary operator <CODE>?:</CODE>
+is <EM>not</EM> supported. <CODE>?</CODE> and <CODE>:</CODE> are used for other
+purposes in C-like syntax in KSM-Scheme.
+
+
+
+
+<H3><A NAME="SEC76" HREF="ksm_toc.html#TOC76">Precedence and Order of Evaluation</A></H3>
+
+<P>
+Precedence and associativity of all operators are the same with C.
+
+
+<TABLE BORDER>
+
+<TR><TD></TD>
+
+OPERATORS 
+</TD><TD> ASSOCIATIVITY
+
+</TR>
+<TR><TD>() [] -&#62; .</TD>
+
+</TD><TD> left to right
+
+</TR>
+<TR><TD>! ~ ++ -- + - * &#38; sizeof</TD>
+
+</TD><TD> right to left
+
+</TR>
+<TR><TD>* / %</TD>
+
+</TD><TD> left to right
+
+</TR>
+<TR><TD>+ -</TD>
+
+</TD><TD> left to right
+
+</TR>
+<TR><TD>&#60;&#60; &#62;&#62;</TD>
+
+</TD><TD> left to right
+
+</TR>
+<TR><TD>&#60; &#60;= &#62; &#62;=</TD>
+
+</TD><TD> left to right
+
+</TR>
+<TR><TD>== !=</TD>
+
+</TD><TD> left to right
+
+</TR>
+<TR><TD>&#38;</TD>
+
+</TD><TD> left to right
+
+</TR>
+<TR><TD>^</TD>
+
+</TD><TD> left to right
+
+</TR>
+<TR><TD>|</TD>
+
+</TD><TD> left to right
+
+</TR>
+<TR><TD>&#38;&#38;</TD>
+
+</TD><TD> left to right
+
+</TR>
+<TR><TD>||</TD>
+
+</TD><TD> left to right
+
+</TR>
+<TR><TD>= += -= *= /= %= &#38;= ^= |= &#60;&#60;= &#62;&#62;=</TD>
+
+</TD><TD> right to left
+
+</TR>
+<TR><TD>,</TD>
+
+</TD><TD> left to right
+</TR></TABLE>
+
+<P>
+Unary +, -, and * have higher precedence than the binary forms.
+
+
+
+
+<H2><A NAME="SEC77" HREF="ksm_toc.html#TOC77">Statements</A></H2>
+
+<P>
+Syntax of statements are the same as in the standard C except that there
+are no <CODE>switch</CODE>, <CODE>continue</CODE>, and <CODE>goto</CODE> statements.
+
+
+<P>
+In KSM-Scheme, each statement has its value. How this value is
+determined is described below.
+
+
+
+
+<H3><A NAME="SEC78" HREF="ksm_toc.html#TOC78">Expression Statement</A></H3>
+
+<P>
+An expression followed by a semicolon is a statement.
+
+
+
+<PRE>
+x = 0;
+i++;
+printf("Hello, world!");
+</PRE>
+
+<P>
+The value of this kind of statement is the value of the expression.
+
+
+
+
+<H3><A NAME="SEC79" HREF="ksm_toc.html#TOC79">Block Statement</A></H3>
+
+<P>
+Braces <CODE>{}</CODE> are used to group declarations and statements
+together into a compound statement, or block, so that they are
+syntactically equivalent to a single statement.
+
+
+
+<PRE>
+{
+  var x = 1;
+  x+2;
+}
+</PRE>
+
+<P>
+The value of a block statement is the value of the last statement in the
+block. Therefore, the value of the above block statement is x+2 (that
+is, 3). 
+
+
+
+
+<H3><A NAME="SEC80" HREF="ksm_toc.html#TOC80">If-Else Statement</A></H3>
+
+<P>
+The syntax of if-else statement is the same as C.
+
+
+<P>
+Formally, the syntax is 
+
+
+
+<PRE>
+if ( expression )
+  statement1
+else
+  statement2
+</PRE>
+
+<P>
+where <CODE>else</CODE> part is optional. 
+
+
+<P>
+The value of an if-else statement is the value of statement1 if
+expression evaluates to true, or the value of statement2 if expression
+evaluates to false. If else part is omitted, and expression evaluates to
+false, the value of if-else statement is unspecified.
+
+
+<P>
+In KSM-Scheme, a value represents false if it is #f, 0 (integer zero),
+0.0 (floating point zero), or NULL (zero pointer). True is represented
+by any value that is not false.
+
+
+
+
+<H3><A NAME="SEC81" HREF="ksm_toc.html#TOC81">While Statement</A></H3>
+
+<P>
+The syntax of while statement is
+
+
+
+<PRE>
+while ( expression )
+  statement
+</PRE>
+
+<P>
+The value of a while statement is unspecified.
+
+
+<P>
+Interpretation of true or false in the evaluation of expression is the
+same as in if-else statement. 
+
+
+<P>
+<CODE>continue</CODE> statement is not supported in KSM-Scheme.
+
+
+
+
+<H3><A NAME="SEC82" HREF="ksm_toc.html#TOC82">For Statement</A></H3>
+
+<P>
+The syntax of for statement is
+
+
+
+<PRE>
+for ( expr1 ; expr2 ; expr3 )
+  statement
+</PRE>
+
+<P>
+Interpretation of true or false in the evaluation of expr2 is the same
+as in if-else statement.
+
+
+<P>
+The value of a for statement is unspecified.
+
+
+<P>
+<CODE>continue</CODE> statement is not supported in KSM-Scheme.
+
+
+
+
+<H3><A NAME="SEC83" HREF="ksm_toc.html#TOC83">Do-While statement</A></H3>
+
+<P>
+the syntax of do-while statement is
+
+
+
+<PRE>
+do
+  statement
+while ( expression );
+</PRE>
+
+<P>
+Interpretation of true or false in the evaluation of expression is the
+same as in if-else statement.
+
+
+<P>
+The value of do-while statement is unspecified.
+
+
+<P>
+<CODE>continue</CODE> statement is not supported in KSM-Scheme.
+
+
+
+
+<H3><A NAME="SEC84" HREF="ksm_toc.html#TOC84">Break statement</A></H3>
+
+<P>
+The syntax of break statement is
+
+
+
+<PRE>
+break expression;
+</PRE>
+
+<P>
+Break statement provides an early exit from <CODE>for</CODE>, <CODE>while</CODE>,
+and <CODE>do</CODE>.
+
+
+<P>
+The value of a break statement is the value of the expression.
+
+
+
+
+<H3><A NAME="SEC85" HREF="ksm_toc.html#TOC85">Return Statement</A></H3>
+
+<P>
+The syntax of return statement is
+
+
+
+<PRE>
+return expression;
+</PRE>
+
+<P>
+The value of a break statement is the value of the expression.
+
+
+
+
+<H3><A NAME="SEC86" HREF="ksm_toc.html#TOC86">Cond Statement</A></H3>
+
+<P>
+The syntax of cond statement is
+
+
+
+<PRE>
+cond {
+  expr1 : stmt
+  expr2 : stmt
+  ...
+  else  : stmt
+}  
+</PRE>
+
+<P>
+where else clause if optional.
+
+
+<P>
+expr1, expr2, ... are evaluated sequentially. When an expression
+evaluates true (in the sense described in if-else statement), the
+following statement is evaluated and the control exits the cond block.
+If else clause is encountered, the following statement is evaluated and
+the control exits the cond block.
+
+
+
+<PRE>
+var x = 1;
+cond {
+x%2==0 : 1;
+x-1    : 2;
+abs(x) : 3;
+else   : 4;
+}          ==&#62; 3
+</PRE>
+
+<P>
+The value of a cond statement is the value of stmt evaluated. If all
+expressions evaluates to false, the value of cond statement is
+unspecified.
+
+
+
+
+<H3><A NAME="SEC87" HREF="ksm_toc.html#TOC87">Case Statement</A></H3>
+<P>
+The syntax of case statement is
+
+
+
+<PRE>
+case ( expression ) {
+expr [, expr]... : stmt
+...
+else : stmt
+}
+</PRE>
+
+<P>
+in which else part is optional. First, expression is evaluated and its
+value is compared (in the sense of <CODE>eqv?</CODE>) with the values of expr's
+listed on the left side of <CODE>:</CODE>. If one of them is equivalent to the
+value of expression, the value of stmt on the right of <CODE>:</CODE> becomes
+the value of the case statement. If <CODE>else</CODE> is encountered instead
+of expr, the value of the following stmt becomes the value of case
+statement unconditionally.
+
+
+
+<PRE>
+var x = 12;
+case(x){
+1,3,5: #f;
+2,4,6: #t;
+}       ==&#62; #t
+
+var y = #\a
+case(y){
+#\a,#\i,#\u,#\e,#\o: 'vowel;
+#\w,#\y: 'semiconsonant;
+else: ''consonant;
+}       ==&#62; vowel
+</PRE>
+
+
+
+<H2><A NAME="SEC88" HREF="ksm_toc.html#TOC88">Function Definition</A></H2>
+
+<P>
+The syntax of function definition similar to the C syntax except that
+type specifications are omitted and that the definition is preceded by
+the keyword <CODE>fun</CODE>.
+
+
+
+<PRE>
+fun <VAR>identifier</VAR> ( <VAR>para_list</VAR> )
+  <VAR>block_stmt</VAR>
+</PRE>
+
+<P>
+The value of function call becomes the value of <VAR>block_stmt</VAR>.
+
+
+
+<PRE>
+fun add2(x)
+{
+  x+2;
+}
+
+add2(3)   ==&#62; 5
+var x = 12;
+add2(x)   ==&#62; 14
+
+fun sum(x,y){ x+y; }
+
+sum(1,2)  ==&#62; 3
+</PRE>
+
+<P>
+<CODE>return</CODE> statement is supported.
+
+
+
+<PRE>
+fun my_sign(x)
+{
+  if( x &#62; 0 )
+    return 1;
+  if( x == 0 ) 0; else -1;
+}
+
+my_sign(0)  ==&#62; 0
+</PRE>
+
+
+
+<H2><A NAME="SEC89" HREF="ksm_toc.html#TOC89">Referencing C Variables and Functions</A></H2>
+
+<P>
+Syntax of referencing C variables and functions becomes very natural
+using the C-like syntax. 
+
+
+<P>
+By usual C declarations for extern variables and functions (preceded by
+the keyword <CODE>extern</CODE>), C variables and functions become accessible
+from KSM-Scheme.
+
+
+
+<PRE>
+extern int errno;
+
+errno    ==&#62; 0
+
+extern int strlen(char *str);
+
+strlen("Hello");    ==&#62; 5
+</PRE>
+
+<P><HR><P>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_12.html">previous</A>, <A HREF="ksm_14.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+</BODY>
+</HTML>

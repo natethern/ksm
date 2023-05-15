@@ -1,0 +1,60 @@
+<HTML>
+<HEAD>
+<!-- Created by texi2html 1.56k from ksm.texi on 12 May 2001 -->
+
+<TITLE>KSM-Scheme Reference Manual - Whitespace and Comments</TITLE>
+</HEAD>
+<BODY>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_6.html">previous</A>, <A HREF="ksm_8.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+<P><HR><P>
+
+
+<H1><A NAME="SEC10" HREF="ksm_toc.html#TOC10">Whitespace and Comments</A></H1>
+<P>
+<A NAME="IDX2"></A>
+<A NAME="IDX3"></A>
+
+
+<P>
+In KSM-Scheme, whitespace characters are spaces, tabs, and
+newlines. Whitespace is used for improved readability and is necessary
+to separate tokens from each other but is otherwise insignificant.
+
+
+<P>
+A semicolon (<CODE>;</CODE>) indicates the start of a comment. The comment
+continues to the end of the line on which the semicolon
+appears. Comments are invisible to Scheme, but the end of the line is
+visible as whitespace. This prevents a comment from appearing in the
+middle of an identifier or number.
+
+
+
+<PRE>
+;;; The FACT procedure computes the factorial
+;;; of a non-negative integer.
+(define fact
+  (lambda (n)
+    (if (= n 0)
+        1          ;Base case: return 1
+        (* n (fact (- n 1))))))
+</PRE>
+
+<P>
+Two characters <CODE>#!</CODE> (character <CODE>#</CODE> followed by <CODE>!</CODE>) also
+starts a comment. The comment continues to the end of the line on which
+<CODE>#!</CODE> appears. This enables a Scheme program executed as an
+interpreter file, like this:
+
+
+
+<PRE>
+#!/usr/local/bin/ksm -f
+(display "Hello, world!")
+(newline)
+</PRE>
+
+<P><HR><P>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_6.html">previous</A>, <A HREF="ksm_8.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+</BODY>
+</HTML>

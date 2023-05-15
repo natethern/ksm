@@ -1,0 +1,217 @@
+<HTML>
+<HEAD>
+<!-- Created by texi2html 1.56k from ksm.texi on 12 May 2001 -->
+
+<TITLE>KSM-Scheme Reference Manual - Literals</TITLE>
+</HEAD>
+<BODY>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_3.html">previous</A>, <A HREF="ksm_5.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+<P><HR><P>
+
+
+<H1><A NAME="SEC4" HREF="ksm_toc.html#TOC4">Literals</A></H1>
+
+<P>
+In KSM-Scheme, literals represent characters, strings, numbers,
+booleans, and other objects.
+
+
+
+
+<H2><A NAME="SEC5" HREF="ksm_toc.html#TOC5">Characters</A></H2>
+
+<P>
+Characters are written using the notation <CODE>#\&#60;character&#62;</CODE> or
+<CODE>#\&#60;character name&#62;</CODE>. For example,
+
+
+
+<PRE>
+#\a             ; lower case letter
+#\A             ; upper case letter
+#\(             ; left parenthesis
+#\              ; the space character
+#\space         ; the preferred way to write a space
+#\newline       ; the newline character
+</PRE>
+
+<P>
+Case is significant in <CODE>#\&#60;character&#62;</CODE>, but not in
+<CODE>#\&#60;character name&#62;</CODE>. If <CODE>&#60;characer&#62;</CODE> in <CODE>#\&#60;character&#62;</CODE>
+is alphabetic, then the character following <CODE>&#60;character&#62;</CODE> must be a
+delimiter character such as a space or parenthesis. This rule resolves
+the ambiguous case where, for example, the sequence of characters
+<CODE>#\space</CODE> could be taken to be either a representation of the space
+character or a representation of the character <CODE>#\s</CODE> followed by a
+representation of the identifier <CODE>pace</CODE>.
+
+
+<P>
+In KSM-Scheme, characters can also be written in the form of
+<CODE>#\U{XXXX}</CODE>, which represents a character with Unicode code value
+of <CODE>XXXX</CODE> (hexadecimal).
+
+
+
+<PRE>
+#\U{63}       ; small letter a
+#\U{D}        ; carriage return
+#\U{3042}     ; hiragana letter a
+#\U{feff}     ; zero width no-break space
+</PRE>
+
+
+
+<H2><A NAME="SEC6" HREF="ksm_toc.html#TOC6">Strings</A></H2>
+
+<P>
+Strings are sequences of characters. Strings are written as sequences of
+characters enclosed within doublequotes ("). A doublequote can be
+written inside a string only by escaping it with a backslash (\), as in
+
+
+
+<PRE>
+"The word \"recursion\" has many meanings."
+</PRE>
+
+<P>
+A backslash can be written inside a string only by escaping it with
+another backslash. In KSM-Scheme, additional escaping sequences are
+present, as follows.
+
+
+
+<PRE>
+"\""      ==&#62; "  (a string composed of a doublequote character)
+"\\"      ==&#62; \
+"\n"      ==&#62; newline
+"\r"      ==&#62; carriage return
+"\t"      ==&#62; tab
+"\U{XXXX} ==&#62; character corresponding to Unicode 
+              code value XXXX (hexadecimal)
+</PRE>
+
+<P>
+When a backslash is followed by a character that is not listed above,
+backslash looses its special meaning and represents a backslash
+character by itself.
+
+
+
+<PRE>
+"\b"  ==&#62; a string composed of two characters ('\' and 'b').
+</PRE>
+
+<P>
+In KSM-Scheme, a string constant may include a newline character. In
+other words, a string constant may continue from one line to the next.
+
+
+
+<PRE>
+"line 1
+line 2"    ==&#62; a string including a newline 
+</PRE>
+
+<P>
+The <EM>length</EM> of a string is the number of characters that it
+contains. This number is an exact, non-negative integer that is fixed
+when the string is created. The <EM>valid indexes</EM> of a string are the
+exact non-negative integers less than the length of the string. The
+first character of a string has index 0, the second has index 1, and so
+on.
+
+
+<P>
+In KSM-Scheme, a string is encoded by UTF-8 (Unicode Transformation
+Format, 8-bit form". This means that if all the characters in a string
+are ASCII characters (that is, #\U{00} through #\U{7F}) the
+length of the string is equal with the byte size of the
+string. However, if it includes a character out of this range, the byte
+size of the string is larger than its length.
+
+
+<P>
+In phrases such as "the characters of <EM>string</EM> beginning with index
+<EM>start</EM> and ending with index <EM>end</EM>," it is understood that
+the index <EM>start</EM> is inclusive and the index <EM>end</EM> is
+exclusive. Thus if <EM>start</EM> and <EM>end</EM> are the same index, a
+null substring is referred to, and if <EM>start</EM> is zero and
+<EM>end</EM> is the length of <EM>string</EM>, then the entire string is
+referred to.
+
+
+
+
+<H2><A NAME="SEC7" HREF="ksm_toc.html#TOC7">Numbers</A></H2>
+
+<P>
+A number may be written in binary, octal, decimal, or hexadecimal by the
+use of a radix prefix. The radix prefixes are <CODE>#b</CODE> (binary),
+<CODE>#o</CODE> (octal), <CODE>#d</CODE> (decimal), and <CODE>#x</CODE>
+(hexadecimal). With no radix prefix, a number is assumed to be expressed
+in decimal.
+
+
+
+<PRE>
+#b1011    ==&#62; 11   (decimal)
+#o1011    ==&#62; 521  (decimal)
+#d1011    ==&#62; 1011 (decimal)
+#x1011    ==&#62; 4113 (decimal)
+</PRE>
+
+<P>
+A numerical constant may be specified to be either exact (that is,
+integer) or inexact (that is, floating point number) by a prefix. The
+prefixes are <CODE>#e</CODE> for exact, and <CODE>#i</CODE> for inexact. An
+exactness prefix may appear before or after any radix prefix that is
+used. If the written represen representation of a number has no
+exactness prefix, the constant may be either inexact or exact. It is
+inexact if it contains a decimal point or an exponent.
+
+
+
+<PRE>
+12345     ==&#62; integer (exact)
+123.45    ==&#62; floating point number (inexact)
+123.4e5   ==&#62; floating point number
+#eb1011   ==&#62; 11 (decimal, exact)
+#ib1011   ==&#62; 11.0 (decimal, inexact)
+#bi1011   ==&#62; 11.0 (same as above)
+</PRE>
+
+<P>
+A rational number is written in the form &#60;integer&#62;/&#60;positive
+integer&#62;. Between &#60;integer&#62;, '/', and &#60;positive integer&#62;, no space is
+allowed. Radix prefixes are not allowed to write &#60;integer&#62;. Rational
+numbers are supported only if GMP library is available ("libgmp.so" and
+"gmp.h" exist).
+
+
+
+<PRE>
+1/2       ==&#62; one half (rational)
+2/4       ==&#62; 1/2 (same as above)
+</PRE>
+
+<P>
+A complex number is written in the form &#60;number&#62;+&#60;number&#62;i. That is, a
+number followed immediately by '+', another number and 'i'. First number
+specifies the real part and the second specifies the imaginary
+part. Radix prefixes are not allowed to write &#60;number&#62;. 
+
+
+
+<PRE>
+1+2i
+0+-2i       ==&#62; real part is 0; imaginary part is -2
+1.2+3.4i
+-2.3+4.5i   ==&#62; real part is -2.3; imaginary part is 4.5
+</PRE>
+
+<P><HR><P>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_3.html">previous</A>, <A HREF="ksm_5.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+</BODY>
+</HTML>

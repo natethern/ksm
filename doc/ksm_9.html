@@ -1,0 +1,1167 @@
+<HTML>
+<HEAD>
+<!-- Created by texi2html 1.56k from ksm.texi on 12 May 2001 -->
+
+<TITLE>KSM-Scheme Reference Manual - Base Package</TITLE>
+</HEAD>
+<BODY>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_8.html">previous</A>, <A HREF="ksm_10.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+<P><HR><P>
+
+
+<H1><A NAME="SEC31" HREF="ksm_toc.html#TOC31">Base Package</A></H1>
+
+
+
+<H2><A NAME="SEC32" HREF="ksm_toc.html#TOC32">List</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>first</B> <I><VAR>list</VAR></I>
+<DD><A NAME="IDX231"></A>
+<DT><U>Function:</U> <B>second</B> <I><VAR>list</VAR></I>
+<DD><A NAME="IDX232"></A>
+<DT><U>Function:</U> <B>third</B> <I><VAR>list</VAR></I>
+<DD><A NAME="IDX233"></A>
+<DT><U>Function:</U> <B>fourth</B> <I><VAR>list</VAR></I>
+<DD><A NAME="IDX234"></A>
+<DT><U>Function:</U> <B>fifth</B> <I><VAR>list</VAR></I>
+<DD><A NAME="IDX235"></A>
+<DT><U>Function:</U> <B>sixth</B> <I><VAR>list</VAR></I>
+<DD><A NAME="IDX236"></A>
+<DT><U>Function:</U> <B>seventh</B> <I><VAR>list</VAR></I>
+<DD><A NAME="IDX237"></A>
+<DT><U>Function:</U> <B>eighth</B> <I><VAR>list</VAR></I>
+<DD><A NAME="IDX238"></A>
+<DT><U>Function:</U> <B>ninth</B> <I><VAR>list</VAR></I>
+<DD><A NAME="IDX239"></A>
+<DT><U>Function:</U> <B>tenth</B> <I><VAR>list</VAR></I>
+<DD><A NAME="IDX240"></A>
+These functions are equivalent to <CODE>(list-ref <VAR>list</VAR> 0)</CODE>,
+... <CODE>(list-ref <VAR>list</VAR> 9)</CODE>, respectively.
+
+
+
+<PRE>
+(first '(1 2 3 4 5))     ==&#62; 1
+(third '(1 2 3 4 5))     ==&#62; 3
+(ninth '(1 2 3 4 5))     ==&#62; #&#60;error&#62;
+</PRE>
+
+</DL>
+
+
+
+<H2><A NAME="SEC33" HREF="ksm_toc.html#TOC33">Use</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>use</B> <I><VAR>symbol</VAR></I>
+<DD><A NAME="IDX241"></A>
+Loads the source file that has been installed by the name of
+<VAR>symbol</VAR> using <CODE>(use-install symbol)</CODE>.  If the source file has
+been already loaded by a previous <CODE>(use <VAR>symbol</VAR>)</CODE>, the file is
+not loaded again. If there is no such a file associated with
+<VAR>symbol</VAR>, an error is raised. Returns an unspecified value.
+
+
+<P>
+@source{init.scm}
+@use{none}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>use-install</B> <I><VAR>symbol</VAR> <VAR>path</VAR></I>
+<DD><A NAME="IDX242"></A>
+Installs <VAR>path</VAR> of source file by the name of <VAR>symbol</VAR>. The
+source file can be later loaded by <CODE>(use <VAR>symbol</VAR>)</CODE>. Returns an
+unspecified value.
+
+
+
+<PRE>
+(use-install 'clang (path-append (ksm-directory) "clang/init.scm"))
+</PRE>
+
+<P>
+@source{init.scm}
+@use{none}
+</DL>
+
+
+
+
+<H2><A NAME="SEC34" HREF="ksm_toc.html#TOC34">Command Line Processing</A></H2>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>cmdline-args</B> <I>[<VAR>optstring</VAR> <VAR>optfun</VAR>]</I>
+<DD><A NAME="IDX243"></A>
+
+
+<P>
+Returns a list of command line arguments (first argument is the program
+name).  If <VAR>optstring</VAR> and <VAR>optfun</VAR> are supplied, options are
+parsed with getopt (3) with the <VAR>opstring</VAR>, and for each optional
+argument <VAR>optfun</VAR> is called with two arguments. The first argument
+is the option character itself and the second argument is the supplied
+option argument (if option argument is not supplied the second argument
+defaults to #f).
+
+
+<P>
+In an interactive session, <CODE>cmdline-args</CODE> returns a list whose only
+argument is the interpreter name.
+
+
+
+<PRE>
+$ ksm
+&#62; (cmdline-args)
+(ksm)
+</PRE>
+
+<P>
+Following is an example when KSM-Scheme is invoked with a Scheme
+program source.
+
+
+
+<PRE>
+$ cat prog.scm
+(display (cmdline-args))
+(newline)
+$ ksm prog.scm a b c
+(prog.scm a b c)
+</PRE>
+
+<P>
+The above example shows that the first element in the list returned by
+<CODE>cmdline-args</CODE> is the name of the Scheme program (prog.scm),
+instead of the interpreter name (ksm). It also shows that command line
+arguments following the Scheme program name (a b c) consitute the
+remaining elements in the list returned by <CODE>cmdline-args</CODE>.
+
+
+
+<PRE>
+$ cat prog.scm
+(display
+  (cmdline-args
+    "ab:c::d"
+    (lambda (opt arg)
+      (display "OPTION: ")
+      (display opt) (display " ")
+      (display arg) (newline))))
+(newline)
+$ ksm prog.scm -a -b ppp -c -d xyz pqr
+OPTION: a #f
+OPTION: b ppp
+OPTION: c #f
+OPTION: d #f
+(prog.scm xyz pqr)
+</PRE>
+
+<P>
+The above example illustrates the usage of <VAR>optstring</VAR>.
+<VAR>optstring</VAR> is a string containing the legitimate option
+characters. If such a character is followed by a colon (as in "b:"), the
+option requires an argument. Two colons (as in "c::") indicates that an
+option takes an optional argument.
+
+
+<P>
+By default, <CODE>cmdline-args</CODE> (more specifically, <CODE>getopt()</CODE> in C
+library) permutes the commanline arguments as it scans, so that
+eventually all the non-options are at the end. This behavior can be
+overridden by placing <CODE>+</CODE> or <CODE>-</CODE> as the first character in
+<VAR>optstring</VAR>. If <CODE>+</CODE> is the first character, then arguments are
+not permuted and option processing stops as soon as a non-option argument
+is encountered, as below.
+
+
+
+<PRE>
+$ cat prog.scm
+(display
+  (cmdline-args
+    "+abc"
+    (lambda (opt arg)
+      (display "OPTION: ")
+      (display opt) (display " ")
+      (display arg) (newline))))
+(newline)
+$ ksm prog.scm -a xyz -b -c
+OPTION: a #f
+(prog.scm xyz -b -c)
+</PRE>
+
+<P>
+If <CODE>-</CODE> is the first character, then arguments are not permuted and
+each non-option argument is handled as if it were the argument of an
+option with character code 1 (#\U{0001}). 
+
+
+
+<PRE>
+$ cat prog.scm
+(display
+  (cmdline-args
+    "-abc"
+    (lambda (opt arg)
+      (display "OPTION: ")
+      (display opt) (display " ")
+      (display arg) (newline))))
+(newline)
+$ ksm prog.scm -a xyz -b -c
+OPTION: a #f
+OPTION: #\U{0001} xyz
+OPTION: b #f
+OPTION: c #f
+(prog.scm)
+</PRE>
+
+<P>
+The special argument <CODE>--</CODE> forces an end of option-scanning
+regardless of the scanning mode.
+
+
+<P>
+<CODE>cmdline-args</CODE> can be used in an interpreter file.
+
+
+
+<PRE>
+$ cat prog
+#!/usr/local/bin/ksm
+(display
+  (cmdline-args
+    "abc"
+    (lambda (opt arg)
+      (display "OPTION: ")
+      (display opt) (display " ")
+      (display arg) (newline))))
+(newline)
+$ prog -a -b -c xyz
+OPTION: a #f
+OPTION: b #f
+OPTION: c #f
+(prog xyz)
+</PRE>
+
+<P>
+@source{base/getopt.c}
+@use{none}
+</DL>
+
+
+
+
+<H2><A NAME="SEC35" HREF="ksm_toc.html#TOC35">Private Variable</A></H2>
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>define-private</B> <I><VAR>symbol</VAR> <VAR>val</VAR></I>
+<DD><A NAME="IDX244"></A>
+<DT><U>Special Form:</U> <B>define-private</B> <I>(<VAR>symbol</VAR> <VAR>para</VAR> ...) <VAR>body</VAR> ...)</I>
+<DD><A NAME="IDX245"></A>
+
+
+<P>
+<CODE>define-private</CODE> is the same with <CODE>define</CODE> except that
+<CODE>define-private</CODE> allocates or sets values of a variable in an
+environment private to the source file. Such a variable can be directly
+accessible only from expressions written in the same file. This behavior
+is analogous to a <EM>static</EM> global variable in C
+language. <CODE>define-private</CODE> returns an unspecified value.
+
+
+
+<PRE>
+$ cat a.scm
+(define-private secret 123)
+(define (a) secret)
+$ ksm
+&#62; (load "a.scm")
+&#62; (a)
+123
+&#62; secret
+#&#60;error&#62;   ;; no such variable: secret
+&#62; (define-private secret 321)
+&#62; (a)
+123        ;; accessing `secret' in "a.scm", indirectly
+&#62; secret
+321        ;; accessing `secret' in the interactive environment
+</PRE>
+
+<P>
+@source{base/base.c}
+@use{none}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>set-private!</B> <I><VAR>symbol</VAR> <VAR>val</VAR></I>
+<DD><A NAME="IDX246"></A>
+
+
+<P>
+Updates the value bound to the symbol spcified by <VAR>symbol</VAR> to
+<VAR>val</VAR> in the environment private to the source file.  If there is no
+such a symbol in the private environment, it raises an error. Therefore,
+<CODE>set-private!</CODE> ensures that it does not inadvertently change the
+value of a symbol defined in the global environment that is accessible
+from any source file.
+
+
+
+<PRE>
+$ cat a.scm
+(define secret 123)
+(define (a) secret)
+$ ksm
+&#62; (load "a.scm")
+&#62; (a) 
+123
+&#62; secret
+123       ;; `secret' in "a.scm"
+&#62; (set-private! secret 321)
+#&#60;error&#62;  ;; no such variable in the private environment
+&#62; (define-private secret 321)
+&#62; (a) 
+123       ;; `secret' in "a.scm"
+&#62; secret 
+321       ;; `secret' in the private environment
+&#62; (set-private! secret 4321) 
+&#62; secret  ;; `secret' in the private environment
+4321
+&#62; (a)     ;; `secret' in "a.scm"
+123
+
+@source{base/base.c}
+@use{none}
+</PRE>
+
+</DL>
+
+
+
+<H2><A NAME="SEC36" HREF="ksm_toc.html#TOC36">Queue</A></H2>
+<P>
+It is often necessary to append an element at the tail of a list. With
+the present implementation, this manipulation requires a computational
+time that is proportional to the list length. <EM>Queue</EM> object has
+been introduced to accomplish such a manipulation in a constant time
+regardles of the list length. Typical usage of queue is as follows.
+
+
+
+<PRE>
+(define q (make-queue))
+(enqueue! q 'one)
+(enqueue! q 'two)
+(enqueue! q 'three)
+(queue-content q)     ==&#62; (one two three) 
+</PRE>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>make-queue</B>
+<DD><A NAME="IDX247"></A>
+Returns an empty queue.
+
+
+<P>
+@source{base/queue.c}
+@use{none}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>enqueue!</B> <I><VAR>queue</VAR> <VAR>obj</VAR></I>
+<DD><A NAME="IDX248"></A>
+Appends <VAR>obj</VAR> at the end of the <VAR>queue</VAR>. Returns an unspecified
+value.
+
+
+<P>
+@source{base/queue.c}
+@use{none}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>queue-content</B> <I><VAR>queue</VAR></I>
+<DD><A NAME="IDX249"></A>
+Returns the content of <VAR>queue</VAR> (a proper list).
+
+
+<P>
+@source{base/queue.c}
+@use{none}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>queue?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX250"></A>
+Returns <CODE>#t</CODE> if <VAR>obj</VAR> is a queue, otherwise returns <CODE>#f</CODE>.
+
+
+
+<PRE>
+(define q (make-queue))
+(enqueue! q 'apple)
+(queue? q)          ==&#62; #t
+</PRE>
+
+<P>
+@source{base/queue.c}
+@use{none}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>dequeue!</B> <I><VAR>queue</VAR></I>
+<DD><A NAME="IDX251"></A>
+Removes the first element from <VAR>queue</VAR>. Returns the removed element
+(which had been the first element before <CODE>dequeue!</CODE> is called).
+
+
+
+<PRE>
+(define queue (make-queue))
+(enqueue! queue 'red)
+(enqueue! queue 'yellow)
+(queue-content queue)   ==&#62; (red yellow)
+(dequeue! queue)        ==&#62; red
+(queue-content queue)   ==&#62; (yellow)
+(dequeue! queue)        ==&#62; yellow
+(queue-content queue)   ==&#62; ()
+</PRE>
+
+<P>
+@source{base/queue.c}
+@use{none}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>queue-empty?</B> <I><VAR>queue</VAR></I>
+<DD><A NAME="IDX252"></A>
+Returns <CODE>#t</CODE> if the content of <VAR>queue</VAR> is empty, otherwise
+returns <CODE>#f</CODE>.
+
+
+
+<PRE>
+(define q (make-queue))
+(queue-empty? q)         ==&#62; #t
+(enqueue! q 'red)
+(queue-empty? q)         ==&#62; #f
+</PRE>
+
+<P>
+@source{base/queue.c}
+@use{none}
+</DL>
+
+
+
+
+<H2><A NAME="SEC37" HREF="ksm_toc.html#TOC37">Error Handling</A></H2>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>error</B> <I><VAR>string</VAR></I>
+<DD><A NAME="IDX253"></A>
+Prints <VAR>string</VAR> to the standard error and end the program
+execution.  
+
+
+<P>
+@source{interp/ext.c}
+@use{none}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>fatal</B> <I><VAR>string</VAR></I>
+<DD><A NAME="IDX254"></A>
+Prints <VAR>string</VAR> to the standard error and end the program
+execution. Currently, effects of <CODE>error</CODE> and <CODE>fatal</CODE> are
+equivalent. 
+
+
+<P>
+@source{interp/ext.c}
+@use{none}
+</DL>
+
+
+
+
+<H2><A NAME="SEC38" HREF="ksm_toc.html#TOC38">Exit</A></H2>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>exit</B> <I>[<VAR>code</VAR>]</I>
+<DD><A NAME="IDX255"></A>
+Exits the program with return code of <CODE>code</CODE>. If <CODE>code</CODE> is
+omitted, it defaults to 0.
+
+
+<P>
+@source{base/base.c}
+@use{none}
+</DL>
+
+
+
+
+<H2><A NAME="SEC39" HREF="ksm_toc.html#TOC39">Hash Table</A></H2>
+<P>
+Hash table object is a table that stores objects attaching a name to
+each object. One can lookup an object in the table by supplying its
+name. Typical usage is as follows.
+
+
+
+<PRE>
+(define tab (make-hashtab 100))
+(hashtab-enter! tab 'John "New York")
+(hashtab-enter! tab 'David "Dallas")
+(hashtab-lookup tab 'John)     ==&#62; "New York"
+(hashtab-includes? tab 'Mary)  ==&#62; #f
+</PRE>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>make-hashtab</B> <I><VAR>size</VAR></I>
+<DD><A NAME="IDX256"></A>
+Returns an empty hashtab. <VAR>size</VAR> indicates the size of the table. To be 
+efficient, <VAR>size</VAR> is recommended to be larger than the expected
+number of elements in the table. However, this is not a strictly
+required condition. One can specify any positive value for <VAR>size</VAR>,
+and whatever the value of <VAR>size</VAR> is the table can store any number
+of entries.
+
+
+<P>
+@source{base/hashtab.c}
+@use{none}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>hashtab?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX257"></A>
+Returns <CODE>#t</CODE> if <VAR>obj</VAR> is a hash table, otherwise returns
+<CODE>#f</CODE>.
+
+
+<P>
+@source{base/hashtab.c}
+@use{none}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>hashtab-enter!</B> <I><VAR>hashtab</VAR> <VAR>symbol</VAR> <VAR>value</VAR></I>
+<DD><A NAME="IDX258"></A>
+Enters a new entry in <VAR>hashtab</VAR>. The name of the entry is
+<VAR>symbol</VAR> and its value is <VAR>value</VAR>.  If there is already an entry
+with the same name, the entry is updated with <VAR>value</VAR>.
+Returns an unspecified value.
+
+
+<P>
+@source{base/hashtab.c}
+@use{none}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>hashtab-lookup</B> <I><VAR>hashtab</VAR> <VAR>symbol</VAR></I>
+<DD><A NAME="IDX259"></A>
+Returns the value of an entry, in <VAR>hashtab</VAR>, whose name is
+equivalent to <VAR>symbol</VAR>.  If there is no such entry, it raises an
+error.
+
+
+<P>
+@source{base/hashtab.c}
+@use{none}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>hashtab-includes?</B> <I><VAR>hashtab</VAR> <VAR>symbol</VAR></I>
+<DD><A NAME="IDX260"></A>
+Returns <CODE>#t</CODE> if <VAR>hashtab</VAR> includes an entry whose name is
+equivalent to <VAR>symbol</VAR>, otherwise returns <CODE>#f</CODE>.
+
+
+<P>
+@source{base/hashtab.c}
+@use{none}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>hashtab-update!</B> <I><VAR>hashtab</VAR> <VAR>symbol</VAR> <VAR>value</VAR></I>
+<DD><A NAME="IDX261"></A>
+Updates the value of the entry, in <VAR>hashtab</VAR>, whose name is
+equivalent to <VAR>symbol</VAR> to <VAR>value</VAR>.  If there is no such entry,
+it raises an error. Returns an unspecified value.
+
+
+
+<PRE>
+(define tab (make-hashtab 100))
+(hashtab-enter! tab 'name 'Alice)
+(hashtab-lookup tab 'name)          ==&#62; Alice
+(hashtab-update! tab 'name 'Bob)
+(hashtab-lookup tab 'name)          ==&#62; Bob
+(hashtab-update! tab 'gender 'male) ==&#62; #&#60;error&#62;
+</PRE>
+
+<P>
+@source{base/hashtab.c}
+@use{none}
+</DL>
+
+
+
+
+<H2><A NAME="SEC40" HREF="ksm_toc.html#TOC40">Logical Operator</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>logical-and</B> <I><VAR>arg</VAR> ...</I>
+<DD><A NAME="IDX262"></A>
+Returns logical-and of <VAR>args</VAR> (that is, <VAR>arg1</VAR> &#38; <VAR>arg2</VAR> &#38;
+... in C).
+
+
+<P>
+(logical-and 7 6) ==&#62; 6
+
+
+<P>
+@source{base/logic.c}
+@use{none}
+NOTE: Currently, <VAR>args</VAR> are limited to 32-bit signed integers.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>logical-or</B> <I><VAR>arg</VAR> ...</I>
+<DD><A NAME="IDX263"></A>
+Returns logical-or of <VAR>args</VAR> (that is, <VAR>arg1</VAR> | <VAR>arg2</VAR> |
+... in C).
+
+
+<P>
+@source{base/logic.c}
+@use{none}
+NOTE: Currently, <VAR>args</VAR> are limited to 32-bit signed integers.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>logical-xor</B> <I><VAR>x</VAR> <VAR>y</VAR></I>
+<DD><A NAME="IDX264"></A>
+Returns exclusive-or of <VAR>x</VAR> and <VAR>y</VAR> (that is, <VAR>x</VAR>^<VAR>y</VAR> in
+C).
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>logical-lshift</B> <I><VAR>expr</VAR> <VAR>n</VAR></I>
+<DD><A NAME="IDX265"></A>
+Returns the value of <VAR>expr</VAR> shifted to the left by <VAR>n</VAR>.
+
+
+
+<PRE>
+(logical-lshift 1 2)  ==&#62; 4
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>logical-rshift</B> <I><VAR>expr</VAR> <VAR>n</VAR></I>
+<DD><A NAME="IDX266"></A>
+Returns the value of <VAR>expr</VAR> shifted to the left by <VAR>n</VAR>.
+
+
+
+<PRE>
+(logical-rshift 1 2)  ==&#62; 4
+</PRE>
+
+</DL>
+
+<P>
+@source{base/logic.c}
+@use{none}
+NOTE: Currently, <VAR>x</VAR> and <VAR>y</VAR> are limited to 32-bit integers.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>logical-complement</B> <I><VAR>arg</VAR></I>
+<DD><A NAME="IDX267"></A>
+Returns one's complement of <VAR>arg</VAR> (that is, ~<VAR>arg</VAR> in C).
+
+
+<P>
+@source{base/logic.c}
+@use{none}
+NOTE: Currently, <VAR>arg</VAR> is limited to 32-bit integer.
+</DL>
+
+
+
+
+<H2><A NAME="SEC41" HREF="ksm_toc.html#TOC41">Path</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>ksm-directory</B>
+<DD><A NAME="IDX268"></A>
+Returns a string that represents the path-name of the KSM-Scheme home
+directory.  KSM-Scheme home directory is determined as the parent
+directory of the directory that contains the KSM-Scheme interpreter.
+For example, if the interpreter is
+
+<PRE>
+/usr/local/ksm/ksm-0.3.0/interp/ksm-0.3.0
+</PRE>
+
+<P>
+KSM-Scheme home directory is
+
+<PRE>
+/usr/local/ksm/ksm-0.3.0
+</PRE>
+
+
+<PRE>
+(ksm-directory)   ==&#62; /usr/local/ksm/ksm-0.3.0  ;; example
+</PRE>
+
+<P>
+@source{interp/ext.c}
+@use{none}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>path-append</B> <I><VAR>node-name</VAR> <VAR>node-name</VAR> ...</I>
+<DD><A NAME="IDX269"></A>
+Returns a string that concatenates all node-name's with inserting '/' 
+between them.
+
+
+
+<PRE>
+(path-append "/home/hangil" "src/ksm" "interp")
+  ==&#62; "/home/hangil/src/ksm/interp"
+(path-append (ksm-directory) "base")
+  ==&#62; "/home/hangil/src/ksm/base"
+</PRE>
+
+<P>
+@source{interp/path.c}
+@use{none}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>path-directory-part</B> <I><VAR>path-name</VAR></I>
+<DD><A NAME="IDX270"></A>
+Returns a string that represents the directory part of the path-name.
+
+
+
+<PRE>
+(path-directory-part "/home/hangil/src/ksm")
+  ==&#62; "/home/hangil/src"
+(path-directory-part "src.scm")
+  ==&#62; "."
+</PRE>
+
+<P>
+@source{interp/path.c}
+@use{none}
+</DL>
+
+
+
+
+<H2><A NAME="SEC42" HREF="ksm_toc.html#TOC42">Dynamic Linking</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>load-shared</B> <I><VAR>lib-path</VAR> [<VAR>init-fun</VAR>]</I>
+<DD><A NAME="IDX271"></A>
+Loads shared library <VAR>lib-path</VAR>. If <VAR>init-fun</VAR> is supplied, it
+also calls the C function named <VAR>init-fun</VAR> with no argument.
+Returns an unspecified value.
+
+
+<P>
+If <VAR>lib-path</VAR> does not include <CODE>/</CODE>, the shared library with
+that name is searched in default directories used by <CODE>ld.so</CODE>.
+
+
+
+<PRE>
+(load-shared "./libservice.so" "init_service")
+  ;; loads the shared library "libservice.so" present 
+  ;; in the current directory and calls the C function 
+  ;; "init_service" which should be decalred as 
+  ;; "void init_service(void);" in C source.
+</PRE>
+
+<P>
+@source{interp/ext.c}
+@use{none}
+</DL>
+
+
+
+
+<H2><A NAME="SEC43" HREF="ksm_toc.html#TOC43">Signal Handling</A></H2>
+<P>
+<DL>
+<DT><U>Variable:</U> <B>@SIGHUP</B>
+<DD><A NAME="IDX272"></A>
+<DT><U>Variable:</U> <B>@SIGINT</B>
+<DD><A NAME="IDX273"></A>
+<DT><U>Variable:</U> <B>@SIGQUIT</B>
+<DD><A NAME="IDX274"></A>
+<DT><U>Variable:</U> <B>@SIGILL</B>
+<DD><A NAME="IDX275"></A>
+<DT><U>Variable:</U> <B>@SIGTRAP</B>
+<DD><A NAME="IDX276"></A>
+<DT><U>Variable:</U> <B>@SIGABRT</B>
+<DD><A NAME="IDX277"></A>
+<DT><U>Variable:</U> <B>@SIGIOT</B>
+<DD><A NAME="IDX278"></A>
+<DT><U>Variable:</U> <B>@SIGBUS</B>
+<DD><A NAME="IDX279"></A>
+<DT><U>Variable:</U> <B>@SIGFPE</B>
+<DD><A NAME="IDX280"></A>
+<DT><U>Variable:</U> <B>@SIGKILL</B>
+<DD><A NAME="IDX281"></A>
+<DT><U>Variable:</U> <B>@SIGUSR1</B>
+<DD><A NAME="IDX282"></A>
+<DT><U>Variable:</U> <B>@SIGSEGV</B>
+<DD><A NAME="IDX283"></A>
+<DT><U>Variable:</U> <B>@SIGUSR2</B>
+<DD><A NAME="IDX284"></A>
+<DT><U>Variable:</U> <B>@SIGPIPE</B>
+<DD><A NAME="IDX285"></A>
+<DT><U>Variable:</U> <B>@SIGALRM</B>
+<DD><A NAME="IDX286"></A>
+<DT><U>Variable:</U> <B>@SIGTERM</B>
+<DD><A NAME="IDX287"></A>
+<DT><U>Variable:</U> <B>@SIGSTKFLT</B>
+<DD><A NAME="IDX288"></A>
+<DT><U>Variable:</U> <B>@SIGCLD</B>
+<DD><A NAME="IDX289"></A>
+<DT><U>Variable:</U> <B>@SIGCHLD</B>
+<DD><A NAME="IDX290"></A>
+<DT><U>Variable:</U> <B>@SIGCONT</B>
+<DD><A NAME="IDX291"></A>
+<DT><U>Variable:</U> <B>@SIGSTOP</B>
+<DD><A NAME="IDX292"></A>
+<DT><U>Variable:</U> <B>@SIGTSTP</B>
+<DD><A NAME="IDX293"></A>
+<DT><U>Variable:</U> <B>@SIGTTIN</B>
+<DD><A NAME="IDX294"></A>
+<DT><U>Variable:</U> <B>@SIGTTOU</B>
+<DD><A NAME="IDX295"></A>
+<DT><U>Variable:</U> <B>@SIGURG</B>
+<DD><A NAME="IDX296"></A>
+<DT><U>Variable:</U> <B>@SIGXCPU</B>
+<DD><A NAME="IDX297"></A>
+<DT><U>Variable:</U> <B>@SIGXFSZ</B>
+<DD><A NAME="IDX298"></A>
+<DT><U>Variable:</U> <B>@SIGVTALRM</B>
+<DD><A NAME="IDX299"></A>
+<DT><U>Variable:</U> <B>@SIGPROF</B>
+<DD><A NAME="IDX300"></A>
+<DT><U>Variable:</U> <B>@SIGWINCH</B>
+<DD><A NAME="IDX301"></A>
+<DT><U>Variable:</U> <B>@SIGPOLL</B>
+<DD><A NAME="IDX302"></A>
+<DT><U>Variable:</U> <B>@SIGIO</B>
+<DD><A NAME="IDX303"></A>
+<DT><U>Variable:</U> <B>@SIGPWR</B>
+<DD><A NAME="IDX304"></A>
+<DT><U>Variable:</U> <B>@SIGUNUSED</B>
+<DD><A NAME="IDX305"></A>
+</DL>
+
+
+<P>
+These variables are signal numbers as defined in <CODE>signum.h</CODE>. Short
+descriptions of their meanings are as follows (excerpted from
+<CODE>signum.h</CODE>).
+
+
+<TABLE BORDER>
+
+<TR><TD>@SIGHUP    </TD><TD> 1  </TD><TD> Hangup (POSIX).</TD>
+
+</TR>
+<TR><TD>@SIGINT    </TD><TD> 2  </TD><TD> Interrupt (ANSI).</TD>
+
+</TR>
+<TR><TD>@SIGQUIT   </TD><TD> 3  </TD><TD> Quit (POSIX).</TD>
+
+</TR>
+<TR><TD>@SIGILL    </TD><TD> 4  </TD><TD> Illegal instruction (ANSI).</TD>
+
+</TR>
+<TR><TD>@SIGTRAP   </TD><TD> 5  </TD><TD> Trace trap (POSIX).</TD>
+
+</TR>
+<TR><TD>@SIGABRT   </TD><TD> 6  </TD><TD> Abort (ANSI).</TD>
+
+</TR>
+<TR><TD>@SIGIOT    </TD><TD> 6  </TD><TD> IOT trap (4.2 BSD).</TD>
+
+</TR>
+<TR><TD>@SIGBUS    </TD><TD> 7  </TD><TD> BUS error (4.2 BSD).</TD>
+
+</TR>
+<TR><TD>@SIGFPE    </TD><TD> 8  </TD><TD> Floating-point exception (ANSI).</TD>
+
+</TR>
+<TR><TD>@SIGKILL   </TD><TD> 9  </TD><TD> Kill, unblockable (POSIX).</TD>
+
+</TR>
+<TR><TD>@SIGUSR1   </TD><TD> 10 </TD><TD> User-defined signal 1 (POSIX).</TD>
+
+</TR>
+<TR><TD>@SIGSEGV   </TD><TD> 11 </TD><TD> Segmentation violation (ANSI).</TD>
+
+</TR>
+<TR><TD>@SIGUSR2   </TD><TD> 12 </TD><TD> User-defined signal 2 (POSIX).</TD>
+
+</TR>
+<TR><TD>@SIGPIPE   </TD><TD> 13 </TD><TD> Broken pipe (POSIX).</TD>
+
+</TR>
+<TR><TD>@SIGALRM   </TD><TD> 14 </TD><TD> Alarm clock (POSIX).</TD>
+
+</TR>
+<TR><TD>@SIGTERM   </TD><TD> 15 </TD><TD> Termination (ANSI).</TD>
+
+</TR>
+<TR><TD>@SIGSTKFLT </TD><TD> 16 </TD><TD> Stack fault.</TD>
+
+</TR>
+<TR><TD>@SIGCLD    </TD><TD> 17 </TD><TD> Same as SIGCHLD (System V).</TD>
+
+</TR>
+<TR><TD>@SIGCHLD   </TD><TD> 17 </TD><TD> Child status has changed (POSIX).</TD>
+
+</TR>
+<TR><TD>@SIGCONT   </TD><TD> 18 </TD><TD> Continue (POSIX).</TD>
+
+</TR>
+<TR><TD>@SIGSTOP   </TD><TD> 19 </TD><TD> Stop, unblockable (POSIX).</TD>
+
+</TR>
+<TR><TD>@SIGTSTP   </TD><TD> 20 </TD><TD> Keyboard stop (POSIX).</TD>
+
+</TR>
+<TR><TD>@SIGTTIN   </TD><TD> 21 </TD><TD> Background read from tty (POSIX).</TD>
+
+</TR>
+<TR><TD>@SIGTTOU   </TD><TD> 22 </TD><TD> Background write to tty (POSIX).</TD>
+
+</TR>
+<TR><TD>@SIGURG    </TD><TD> 23 </TD><TD> Urgent condition on socket (4.2 BSD).</TD>
+
+</TR>
+<TR><TD>@SIGXCPU   </TD><TD> 24 </TD><TD> CPU limit exceeded (4.2 BSD).</TD>
+
+</TR>
+<TR><TD>@SIGXFSZ   </TD><TD> 25 </TD><TD> File size limit exceeded (4.2 BSD).</TD>
+
+</TR>
+<TR><TD>@SIGVTALRM </TD><TD> 26 </TD><TD> Virtual alarm clock (4.2 BSD).</TD>
+
+</TR>
+<TR><TD>@SIGPROF   </TD><TD> 27 </TD><TD> Profiling alarm clock (4.2 BSD).</TD>
+
+</TR>
+<TR><TD>@SIGWINCH  </TD><TD> 28 </TD><TD> Window size change (4.3 BSD, Sun).</TD>
+
+</TR>
+<TR><TD>@SIGPOLL   </TD><TD> 29 </TD><TD> Pollable event occurred (System V).</TD>
+
+</TR>
+<TR><TD>@SIGIO     </TD><TD> 29 </TD><TD> I/O now possible (4.2 BSD).</TD>
+
+</TR>
+<TR><TD>@SIGPWR    </TD><TD> 30 </TD><TD> Power failure restart (System V).</TD>
+
+</TR>
+<TR><TD>@SIGUNUSED </TD><TD> 31</TD>
+
+</TR></TABLE>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>make-sigset</B>
+<DD><A NAME="IDX306"></A>
+Returns an empty sigset, which is a Scheme object that represents
+<CODE>sigset_t</CODE> in C language.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>sigset?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX307"></A>
+Returns <CODE>#t</CODE> if <VAR>obj</VAR> is a sigset object, otherwise returns
+<CODE>#f</CODE>.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>sigemptyset</B> <I><VAR>sigset</VAR></I>
+<DD><A NAME="IDX308"></A>
+Excludes all of the defined signals from <VAR>sigset</VAR>. <VAR>sigset</VAR>
+should be a sigset object. Returns an unspecified value.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>sigfillset</B> <I><VAR>sigset</VAR></I>
+<DD><A NAME="IDX309"></A>
+Adds all of the defined signals in <VAR>sigset</VAR>. <VAR>sigset</VAR>
+should be a sigset object. Returns an unspecified value.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>sigaddset</B> <I><VAR>sigset</VAR> <VAR>signum</VAR></I>
+<DD><A NAME="IDX310"></A>
+Adds the signal <VAR>signum</VAR> in <VAR>sigset</VAR>. <VAR>sigset</VAR> should be a
+sigset object. <VAR>sigset</VAR> should be an integer. Returns an unspecified
+value.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>sigdelset</B> <I><VAR>sigset</VAR> <VAR>signum</VAR></I>
+<DD><A NAME="IDX311"></A>
+Deletes the signal <VAR>signum</VAR> from <VAR>sigset</VAR>. <VAR>sigset</VAR> should be a
+sigset object. <VAR>sigset</VAR> should be an integer. Returns an unspecified
+value.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>sigismember?</B> <I><VAR>sigset</VAR> <VAR>signum</VAR></I>
+<DD><A NAME="IDX312"></A>
+Returns <CODE>#t</CODE> if the signal <VAR>signum</VAR> is included in
+<VAR>sigset</VAR>, otherwise returns <CODE>#f</CODE>. <VAR>sigset</VAR> should be a
+sigset object. <VAR>sigset</VAR> should be an integer.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Variable:</U> <B>@SIG_BLOCK</B>
+<DD><A NAME="IDX313"></A>
+<DT><U>Variable:</U> <B>@SIG_UNBLOCK</B>
+<DD><A NAME="IDX314"></A>
+<DT><U>Variable:</U> <B>@SIG_SETMASK</B>
+<DD><A NAME="IDX315"></A>
+
+
+<P>
+These variables are from <CODE>signal.h</CODE>.
+</DL>
+
+
+
+
+<H2><A NAME="SEC44" HREF="ksm_toc.html#TOC44">Schedule</A></H2>
+
+<P>
+<DL>
+<DT><U>Variable:</U> <B>@SCHED_RR</B>
+<DD><A NAME="IDX316"></A>
+<DT><U>Variable:</U> <B>@SCHED_FIFO</B>
+<DD><A NAME="IDX317"></A>
+<DT><U>Variable:</U> <B>@SCHED_OTHER</B>
+<DD><A NAME="IDX318"></A>
+These values are from <CODE>sched.h</CODE>.
+</DL>
+
+
+
+
+<H2><A NAME="SEC45" HREF="ksm_toc.html#TOC45">Case Sensitivity</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>set-read-case-sensitivitiy</B> <I><VAR>bool</VAR></I>
+<DD><A NAME="IDX319"></A>
+Sets the case-sensitivity of Scheme reader. If <VAR>bool</VAR> is #t, symbol
+names are read with preserving the case-sensitivity as in C (default
+behavior). Otherwise, symbol names are read with ignoring the
+case-sensitivity. Returns an unspecified value.
+
+
+
+<PRE>
+(eq? 'abc 'ABC) ==&#62; #f ;; KSM-Scheme is case sensitive by default
+(set-read-case-sensitivity #f)
+(eq? 'abc 'ABC) ==&#62; #t ;; This is in accord with Scheme Standard
+(set-read-case-sensitivity #t)
+(eq? 'abc 'ABC) ==&#62; #f ;;
+</PRE>
+
+<P>
+@source{base/base.c}
+@use{none}
+NOTE: The default behavior of KSM-Scheme (case-sensitive) is contrary to
+the Scheme Standard. This decision in KSM-Scheme was made to be
+convinient in interfacing with C.
+</DL>
+
+
+<P><HR><P>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_8.html">previous</A>, <A HREF="ksm_10.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+</BODY>
+</HTML>

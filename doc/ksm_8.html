@@ -1,0 +1,3723 @@
+<HTML>
+<HEAD>
+<!-- Created by texi2html 1.56k from ksm.texi on 12 May 2001 -->
+
+<TITLE>KSM-Scheme Reference Manual - Standard Package</TITLE>
+</HEAD>
+<BODY>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_7.html">previous</A>, <A HREF="ksm_9.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+<P><HR><P>
+
+
+<H1><A NAME="SEC11" HREF="ksm_toc.html#TOC11">Standard Package</A></H1>
+
+<P>
+Standard package includes special forms and built-in functions listed in
+Scheme Standard.
+
+
+
+
+<H2><A NAME="SEC12" HREF="ksm_toc.html#TOC12">Special Forms</A></H2>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>quote</B> <I><VAR>datum</VAR></I>
+<DD><A NAME="IDX4"></A>
+<DT><U>Special Form:</U> <B>'<VAR>datum</VAR></B>
+<DD><A NAME="IDX5"></A>
+(<CODE>quote</CODE> <VAR>datum</VAR>) evaluates to <VAR>datum</VAR>. <VAR>Datum</VAR> may be
+any external representation of a Scheme object. This notation is used to
+include literal constants in Scheme code.
+
+
+
+<PRE>
+(quote a)         ==&#62; a
+(quote #(a b c))  ==&#62; #(a b c)
+(quote (+ 1 2))   ==&#62; (+ 1 2)
+</PRE>
+
+<P>
+(<CODE>quote</CODE> <VAR>datum</VAR>) may be abbreviated as
+<CODE>'</CODE><VAR>datum</VAR>. The two notations are equivalent in all respects.
+
+
+
+<PRE>
+'a              ==&#62; a
+'#(a b c)       ==&#62; #(a b c)
+'()             ==&#62; ()
+'(+ 1 2)        ==&#62; (+ 1 2)
+'(quote a)      ==&#62; (quote a)
+''a             ==&#62; (quote a)
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>lambda</B> <I><VAR>formals</VAR> <VAR>body</VAR></I>
+<DD><A NAME="IDX6"></A>
+<VAR>Formals</VAR> should be a formal arguments list as described below, and
+<VAR>body</VAR> should be a sequence of one or more expressions.
+
+
+<P>
+A <CODE>lambda</CODE> expression evaluates to a procedure. The environment in
+effect when the <CODE>lambda</CODE> expression was evaluated is remembered as
+part of the procedure. When the procedure is later called with some
+actual arguments, the environment in which the <CODE>lambda</CODE> expression
+was evaluated will be extended by binding the variables in the formal
+argument list to fresh locations, the corresponding actual argument
+values will be stored in those locations, and the expression in the body
+of the <CODE>lambda</CODE> expression will be evaluated sequentially in the
+extended environment. The result of the last expression in the body will
+be returned as the result of the procedure call.
+
+
+
+<PRE>
+(lambda (x) (+ x x))      ==&#62; a procedure
+((lambda (x) (+ x x)) 4)  ==&#62; 8
+
+(define reverse-subtract
+  (lambda (x y) (- y x)))
+(reverse-subtract 7 10)   ==&#62; 3
+
+(define add4
+  (let ((x 4))
+    (lambda (y) (+ x y))))
+(add4 6)                  ==&#62; 10
+
+</PRE>
+
+<P>
+<VAR>Formals</VAR> should have one of the following forms:
+
+<UL>
+<LI>
+
+(<VAR>variable1</VAR> ...): The procedure takes a fixed number of arguments;
+when the procedure is called, the arguments will be stored in the
+bindings of the corresponding variables. 
+
+<LI>
+
+<VAR>variable</VAR>: The procedure takes any number of arguments; when the
+procedure is called, the sequence of actual arguments is converted into
+a newly allocated list, and the list is stored in the binding of the
+<VAR>variable</VAR>.
+
+
+<PRE>
+((lambda x x) 3 4 5 6)    ==&#62; (3 4 5 6)
+</PRE>
+
+<LI>
+
+(<VAR>variable-1</VAR> ... <VAR>variable-n</VAR> . <VAR>variable-n+1</VAR>): If a space
+delimited period precedes the last variable, then the procedure takes
+<EM>n</EM> or more arguments, where <EM>n</EM> is the number of formal
+arguments before the period (there must be at least one). The value
+stored in the binding of the last variable will be a newly allocated
+list of the actual arguments left over after all the other actual
+arguments have been matched up against the other formal arguments.
+
+
+<PRE>
+((lambda (x y . z) z) 3 4 5 6)  ==&#62; (5 6)
+</PRE>
+
+<LI>
+
+(<VAR>variable</VAR> ... [&#38;optional <VAR>variable</VAR> (<VAR>variable</VAR>
+init-value) (<VAR>variable</VAR>) ...] [&#38;rest <VAR>variable</VAR>] [&#38;key
+<VAR>variable</VAR> (<VAR>variable</VAR> init-value) ...]): Leading
+<VAR>variable</VAR>'s are required parameters as above. <VAR>Variable</VAR>'s
+following "&#38;optional" is optional parameters. In its first form,
+"<VAR>variable</VAR>", bound value is set to '() if no argument is
+supplied. In its second form, "(<VAR>variable</VAR> init-value", init-value
+is evaluated at run-time and bound with <VAR>variable</VAR> if no argument is
+supplied. In its third form, "(<VAR>variable</VAR>)", list of remaining
+arguments excluding keyword arguments (see below) is bound to
+<VAR>variable</VAR>. <VAR>Variable</VAR> that follows "&#38;rest" is bound to the
+list of remaining arguments. <VAR>Variable</VAR>'s following "&#38;key" are
+keyword arguments. In its first form, "<VAR>variable</VAR>", <VAR>variable</VAR>
+is bound to '() if keyword argument is not supplied. In its second form,
+"<VAR>variable</VAR> init-value", init-value is evaluated at run-time and
+bound to <VAR>variable</VAR> if keyword argument is not supplied. When
+calling lambda functions with keyword arguments, keyword argument is
+specified by an identifier prefixed by ':' followed by its value.
+
+
+<PRE>
+
+(define (f a b &#38;optional c) (list a b c))
+(f 1 2 3) ==&#62; (1 2 3)
+(f 1 2) ==&#62; (1 2 '())
+
+(define (f a b &#38;optional (c 10)) (list a b c))
+(f 1 2 3) ==&#62; (1 2 3)
+(f 1 2) ==&#62; (1 2 10)
+
+(define (f a b &#38;rest rest) (list a b rest))
+(f 1 2 3 4 5) ==&#62; (1 2 (3 4 5))
+
+(define (f a b &#38;key c) (list a b c))
+(f 1 2 :c 12) ==&#62; (1 2 12)
+(f 1 2) ==&#62; (1 2 '())
+
+(define (f a b &#38;key (c 100) (d 200)) (list a b c d))
+(f 1 2 :d 4 :c 3) ==&#62; (1 2 3 4)
+(f 1 2) ==&#62; (1 2 100 200)
+
+(define (f a b &#38;optional (args) &#38;key c) args)
+(f 1 2 3 4 5 :c 100) ==&#62; (3 4 5)
+
+(define (f a b &#38;optional (args) &#38;rest rest &#38;key c) args)
+(f 1 2 3 4 5 :c 100) ==&#62; (3 4 5)
+
+(define (f a b &#38;optional (args) &#38;rest rest &#38;key c) rest)
+(f 1 2 3 4 5 :c 100) ==&#62; (:c 100)
+
+</PRE>
+
+</UL>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>define</B> <I><VAR>variable</VAR> <VAR>expression</VAR></I>
+<DD><A NAME="IDX7"></A>
+<DT><U>Special Form:</U> <B>define</B> <I>(<VAR>variable</VAR> <VAR>formals</VAR>) <VAR>body</VAR></I>
+<DD><A NAME="IDX8"></A>
+<DT><U>Special Form:</U> <B>define</B> <I>(<VAR>variable</VAR> . <VAR>formal</VAR>) <VAR>body</VAR></I>
+<DD><A NAME="IDX9"></A>
+In the second form, <VAR>formals</VAR> should be either a sequence of zero or
+more variables, or a sequence of one or more variables followed by a
+space-delimited period and another variable. This form is equivalent to
+
+<PRE>
+(define <VAR>variable</VAR>
+  (lambda (<VAR>formals</VAR>) body))
+</PRE>
+
+<P>
+In the third form, <VAR>formal</VAR> should be a single variable. This form
+is equivalent to
+
+<PRE>
+(define <VAR>variable</VAR>
+  (lambda <VAR>formal</VAR> <VAR>body</VAR>))
+</PRE>
+
+<P>
+At the top level of a program, a definition
+
+<PRE>
+(define <VAR>variable</VAR> <VAR>expression</VAR>)
+</PRE>
+
+<P>
+has essentially the same effect as the assignment expression
+
+<PRE>
+(set! <VAR>variable</VAR> <VAR>expression</VAR>)
+</PRE>
+
+<P>
+if <VAR>variable</VAR> is bound. If <VAR>variable</VAR> is not bound, however,
+then the definition will bind <VAR>variable</VAR> to a new location before
+performing the assignment, whereas it would be an error to perform
+<CODE>set!</CODE> on an unbound variable.
+
+
+
+<PRE>
+(define add3
+  (lambda (x) (+ x 3)))
+(add3 3)                 ==&#62; 6
+(define first car)
+(first '(1 2))           ==&#62; 1
+</PRE>
+
+<P>
+Definitions may occur at the beginning of a <VAR>body</VAR> (that is, the
+body of a <CODE>lambda</CODE>, <CODE>let</CODE>, <CODE>let*</CODE>, <CODE>letrec</CODE>,
+<CODE>let-syntax</CODE>, or <CODE>letrec-syntax</CODE> expression). Such definitions
+are known as <EM>internal definitions</EM> as opposed to the top level
+definitions described above. The variable defined by an internal
+definition is local to the <VAR>body</VAR>. That is, <VAR>variable</VAR> is bound
+rather than assigned, and the scope of the binding is the entire
+<VAR>body</VAR>. For example,
+
+
+
+<PRE>
+(let ((x 5))
+  (define foo (lambda (y) (bar x y)))
+  (define bar (lambda (a b) (+ (* a b) a)))
+  (foo (+ x 3)))         ==&#62; 45
+</PRE>
+
+<P>
+A <VAR>body</VAR> containing internal definitions can always be converted
+into a completely equivalent <CODE>letrec</CODE> expression. For example, the
+<CODE>let</CODE> expression in the above example is equivalent to 
+
+
+
+<PRE>
+(let ((x 5))
+  (letrec ((foo (lambda (y) (bar x y)))
+           (bar (lambda (a b) (+ (* a b) a))))
+    (foo (+ x 3))))
+</PRE>
+
+<P>
+Just as for the equivalent <CODE>letrec</CODE> expression, it must be possible
+to evaluate each <VAR>expression</VAR> of every internal definition in a
+<VAR>body</VAR> without assigning or referring to the value of any
+<VAR>variable</VAR> being defined.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>if</B> <I><VAR>test</VAR> <VAR>consequent</VAR> <VAR>alternate</VAR></I>
+<DD><A NAME="IDX10"></A>
+<DT><U>Special Form:</U> <B>if</B> <I><VAR>test</VAR> <VAR>consequent</VAR></I>
+<DD><A NAME="IDX11"></A>
+
+
+<P>
+An <CODE>if</CODE> expression is evaluated as follows: first, <VAR>test</VAR> is
+evaluated. If it yields a true value, then <VAR>consequent</VAR> is evaluated
+and its value is returned. Otherwise <VAR>alternate</VAR> is evaluated and
+its value is returned. If <VAR>test</VAR> yields a false value and no
+<VAR>alternate</VAR> is specified, then the result of the expression is
+unspecified. 
+
+
+
+<PRE>
+(if (&#62; 3 2) 'yes 'no)          ==&#62; yes
+(if (&#62; 2 3) 'yes 'no)          ==&#62; no
+(if (&#62; 3 2) (- 3 2) (+ 3 2))   ==&#62; 1
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>set!</B> <I><VAR>variable</VAR> <VAR>expression</VAR></I>
+<DD><A NAME="IDX12"></A>
+<VAR>Expression</VAR> is evaluated, and the resulting value is stored in the
+location to which <VAR>variable</VAR> is bound. <VAR>Variable</VAR> must be bound
+either in some region enclosing the <CODE>set!</CODE> expression or at top
+level. The result of the <CODE>set!</CODE> expression is unspecified.
+
+<PRE>
+(define x 2)
+(+ x 1)           ==&#62; 3
+(set! x 4)
+(+ x 1)           ==&#62; 5
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>set-value!</B> <I><VAR>variable</VAR> <VAR>expression</VAR></I>
+<DD><A NAME="IDX13"></A>
+Same with <CODE>set!</CODE>, but returns the value of <VAR>expression</VAR>
+
+
+
+<PRE>
+(define x 1)
+(set! x 10)        ==&#62; #&#60;unspecified&#62;
+(set-value! x 20)  ==&#62; 20       
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>cond</B> <I><VAR>clause1</VAR> <VAR>claus2</VAR></I>
+<DD><A NAME="IDX14"></A>
+Each <VAR>clause</VAR> should be of the form
+
+<PRE>
+(<VAR>test</VAR> <VAR>expression</VAR> ...)
+</PRE>
+
+<P>
+where <VAR>test</VAR> is any expression. Alternatively, a <VAR>clause</VAR> may be
+of the form
+
+<PRE>
+(<VAR>test</VAR> =&#62; <VAR>expression</VAR>)
+</PRE>
+
+<P>
+The last <VAR>clause</VAR> may be an "else clause," which has the form
+
+<PRE>
+(else <VAR>expression1</VAR> <VAR>expression2</VAR> ...)
+</PRE>
+
+<P>
+A <CODE>cond</CODE> expression is evaluated by evaluating the <VAR>test</VAR>
+expression of successive <VAR>clause</VAR>'s in order until one of them
+evaluates to a true value. When a <VAR>test</VAR> evaluates to a true value,
+then the remaining <VAR>expression</VAR>'s in its <VAR>clause</VAR> are evaluated
+in order, and the result of the last <VAR>expression</VAR> in the
+<VAR>clause</VAR> is returned as the result of the entire <CODE>cond</CODE>
+expression. If the selected <VAR>clause</VAR> contains only the <VAR>test</VAR>
+and no <VAR>expression</VAR>'s, then the value of the <VAR>test</VAR> is returned
+as the result. If the selected <VAR>clause</VAR> uses the <CODE>=&#62;</CODE> alternate
+form, then the <VAR>expression</VAR> is evaluated. Its value must be a
+procedure that accepts one argument; this procedure is then called with
+the value of the <VAR>test</VAR> as the only argument and the value returned
+by this procedure is returned by the <CODE>cond</CODE> expression. If all
+<VAR>test</VAR>'s evaluate to false values, and there is no else clause, then
+the result of evaluation of the <CODE>cond</CODE> expression is unspecified;
+if there is an else clause, then its <VAR>expression</VAR>'s are evaluated,
+and the value of the last one is returned.
+
+<PRE>
+(cond ((&#62; 3 2) 'greater)
+      ((&#60; 3 2) 'less))      ==&#62; greater
+(cond ((&#62; 3 3) 'greater)
+      ((&#60; 3 3) 'less)
+      (else 'equal)         ==&#62; equal
+(cond ((assv 'b '((a 1) (b 2))) =&#62; cadr)
+      (else #f))            ==&#62; 2
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>case</B> <I><VAR>key</VAR> <VAR>clause1</VAR> <VAR>clause2</VAR> ...</I>
+<DD><A NAME="IDX15"></A>
+<VAR>Key</VAR> may be any expression. Each <VAR>clause</VAR> should have the form
+
+<PRE>
+((<VAR>datum1</VAR> ...) <VAR>expression1</VAR> <VAR>expression2</VAR> ...)
+</PRE>
+
+<P>
+where each <VAR>datum</VAR> is an identifier or a literal. All the
+<VAR>datum</VAR>'s must be distinct. The last <VAR>clause</VAR> may be an "else
+clause," which has the form
+
+<PRE>
+(else <VAR>expression1</VAR> <VAR>expression2</VAR> ...)
+</PRE>
+
+<P>
+A <CODE>case</CODE> expression is evaluated as follows. <VAR>Key</VAR> is evaluated
+and its result is compared against each <VAR>datum</VAR>. If the result of
+evaluating <VAR>key</VAR> is equivalent (in the sense of <VAR>eqv?</VAR>) to a
+<VAR>datum</VAR>, then the expressions in the corresponding <VAR>clause</VAR> are
+evaluated from left to right and the result of the last expression in
+the clause is returned as the result of the <CODE>case</CODE> expression. If
+the result of evaluating <VAR>key</VAR> is different from every <VAR>datum</VAR>,
+then if there is an else clause its expressions are evaluated and the
+result of the last is the result of the <CODE>case</CODE> expression;
+otherwise the result of the <CODE>case</CODE> expression is unspecified. 
+
+
+
+<PRE>
+(case (* 2 3)
+  ((2 3 5 7) 'prime)
+  ((1 4 6 8 9) 'composite))   ==&#62; composite
+(case (car '(c d))
+  ((a) 'a)
+  ((b) 'b))                   ==&#62; #&#60;unspecified&#62;
+(case (car '(c d))
+  ((a e i o u) 'vowel)
+  ((w y) 'semivowel)
+  (else 'consonant))          ==&#62; consonant
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>and</B> <I><VAR>test1</VAR> ...</I>
+<DD><A NAME="IDX16"></A>
+The <VAR>test</VAR> expressions are evaluated from left to right, and the
+value of the first expression that evaluates to a false value is
+returned. Any remaining expressions are not evaluated. If all the
+expressions evaluate to true values, the value of the last expression is
+returned. If there are no expression then <CODE>#t</CODE> is returned.
+
+
+
+<PRE>
+(and (= 2 2) (&#62; 2 1))     ==&#62; #t
+(and (= 2 2) (&#60; 2 1))     ==&#62; #f
+(and 1 2 'c '(f g))       ==&#62; (f g)
+(and)                     ==&#62; #t
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>or</B> <I><VAR>test1</VAR> ...</I>
+<DD><A NAME="IDX17"></A>
+The <VAR>test</VAR> expressions are evaluated from left to right, and the
+value of the first expression that evaluates to a true value is
+returned. Any remaining expressions are not evaluated. If all the
+expressions evaluate to false values, the value of the last expression
+is returned. If there are no expression then <CODE>#f</CODE> is returned.
+
+
+
+<PRE>
+(or (= 2 2) (&#62; 2 1))      ==&#62; #t
+(or (= 2 2) (&#60; 2 1))      ==&#62; #t
+(or #f #f #f)             ==&#62; #f
+(or (memq 'b '(a b c))
+    (/ 3 0))              ==&#62; (b c)
+(or)                      ==&#62; #f
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>let</B> <I><VAR>bindings</VAR> <VAR>body</VAR></I>
+<DD><A NAME="IDX18"></A>
+<VAR>Bindings</VAR> should have the form
+
+<PRE>
+((<VAR>variable1</VAR> <VAR>init1</VAR>) ...)
+</PRE>
+
+<P>
+where each <VAR>init</VAR> is an expression, and <VAR>body</VAR> should be a
+sequence of one or more expressions. It is an error for a <VAR>variable</VAR>
+to appear more than once in the list of variables being bound.
+
+
+<P>
+The <VAR>init</VAR>'s are evaluated in the current environment (in some
+unspecified order), the <VAR>variable</VAR>'s are bound to fresh locations
+holding the results, the <VAR>body</VAR> is evaluted in the extended
+environment, and the value of the last expression of <VAR>body</VAR> is
+returned. Scope of each <VAR>variable</VAR> is restricted to <VAR>body</VAR>.
+
+
+
+<PRE>
+(let ((x 2) (y 3))
+  (* x y))                ==&#62; 6
+(let ((x 2) (y 3))
+  (let ((x 7)
+        (z (+ x y)))
+    (* z x)))             ==&#62; 35
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>let</B> <I><VAR>variable</VAR> <VAR>bidings</VAR> <VAR>body</VAR></I>
+<DD><A NAME="IDX19"></A>
+"Named <CODE>let</CODE>" is a variant on the syntax of <CODE>let</CODE> which
+provides a more general looping construct than <CODE>do</CODE> and may also be
+used to express recursions. It has the same syntax and semantics as
+ordinary <CODE>let</CODE> except that <VAR>variable</VAR> is bound within
+<VAR>body</VAR> to a procedure whose formal arguments are the bound variables
+and whose body is <VAR>body</VAR>. Thus the execution of <VAR>body</VAR> may be
+repeated by invoking the procedure named by <VAR>variable</VAR>.
+
+
+
+<PRE>
+(let loop ((numbers '(3 -2 1 6 -5))
+           (nonneg '())
+           (neg '()))
+  (cond ((null? numbers) (list nonneg neg))
+        ((&#62;= (car numbers) 0)
+         (loop (cdr numbers)
+               (cons (car numbers) nonneg)
+               neg))
+        ((&#60; (car numbers) 0)
+         (loop (cdr numbers)
+               nonneg
+               (cons (car numbers) neg)))))
+        ==&#62; ((6 1 3) (-5 -2))
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>let*</B> <I><VAR>bindings</VAR> <VAR>body</VAR></I>
+<DD><A NAME="IDX20"></A>
+<VAR>Bindings</VAR> should have the form
+
+<PRE>
+((<VAR>variable1</VAR> <VAR>init1</VAR>) ...)
+</PRE>
+
+<P>
+where each <VAR>init</VAR> is an expression, and <VAR>body</VAR> should be a
+sequence of one or more expressions. 
+
+
+<P>
+<CODE>let*</CODE> is similar to <CODE>let</CODE>, but the bindings are performed
+sequentially from left to right, and the region of a binding indicated
+by (<VAR>variable</VAR> <VAR>init</VAR>) is that part of the <CODE>let*</CODE>
+expression to the right of the binding. Thus the second binding is done
+in an environment in which the first binding is visible, and so on.
+
+
+
+<PRE>
+(let ((x 2) (y 3))
+  (let* ((x 7)
+         (z (+ x y)))
+    (* z x)))             ==&#62; 70
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>letrec</B> <I><VAR>bindings</VAR> <VAR>body</VAR></I>
+<DD><A NAME="IDX21"></A>
+<VAR>Bindings</VAR> should have the form
+
+<PRE>
+((<VAR>variable1</VAR> <VAR>init1</VAR>) ...)
+</PRE>
+
+<P>
+and <VAR>body</VAR> should be a sequence of one or more expressions. It is an
+error for a <VAR>variable</VAR> to appear more than once in the list of
+variables being bound.
+
+
+<P>
+The <VAR>variable</VAR>'s are bound to fresh locations holding undefined
+values, the <VAR>init</VAR>'s are evaluated in the resulting environment (in
+some unspecified order), each <VAR>variable</VAR> is assigned to the result
+of the corresponding <VAR>init</VAR>, the <VAR>body</VAR> is evaluated in the
+resulting environment, and the value of the last expression in
+<VAR>body</VAR> is returned. Scope of each binding of a <VAR>variable</VAR> is
+the entire <CODE>letrec</CODE> expression, making it possible to define
+mutually excursive procedures.
+
+
+
+<PRE>
+(letrec ((even?
+          (lambda (n)
+           (if (zero? n)
+               #t
+               (odd? (- n 1)))))
+         (odd?
+          (lambda (n)
+           (if (zero? n)
+               #f
+               (even? (- n 1))))))
+ (even? 88))
+               ==&#62; #t
+</PRE>
+
+<P>
+One restriction on <CODE>letrec</CODE> is very important: it must be possible
+to evaluate each <VAR>init</VAR> without assigning or referring to the value
+of any <VAR>variable</VAR>. If this restriction is violated, then it is an
+error. The restriction is necessary because Scheme passes arguments by
+value rather than by name. In the most common uses of <CODE>letrec</CODE>, all
+the <VAR>init</VAR>'s are <CODE>lambda</CODE> expressions and the retriction is
+satisfied automatically.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>begin</B> <I><VAR>expression1</VAR> <VAR>expression2</VAR> ...</I>
+<DD><A NAME="IDX22"></A>
+The <VAR>expression</VAR>'s are evaluated sequentially from left to right,
+and the value of the last <VAR>expression</VAR> is returned. This expression
+type is used to sequence side effects such as input and output.
+
+
+
+<PRE>
+(define x 0)
+
+(begin (set! x 5) (+ x 1)) ==&#62; 6
+
+(begin (display "4 plus 1 equals ")
+       (display (+ 4 1)))  ==&#62; prints "4 plus 1 equals 5", and
+                               returns #&#60;unspecified&#62;
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>do</B> <I><VAR>bindings</VAR> <VAR>test-clause</VAR> <VAR>body</VAR></I>
+<DD><A NAME="IDX23"></A>
+<VAR>Bindings</VAR> should have the form
+
+<PRE>
+((<VAR>variable1</VAR> <VAR>init1</VAR> <VAR>step1</VAR>) ...),
+</PRE>
+
+<P>
+the <VAR>test-clause</VAR> should have the form
+
+<PRE>
+(<VAR>test</VAR> <VAR>expression</VAR> ...),
+</PRE>
+
+<P>
+and the <VAR>body</VAR> should be a sequence of one or more expressions.
+
+
+<P>
+<CODE>do</CODE> is an iteration construct. It specifies a set of variables to
+be bound, how they are to be initialized at the start, and how they are
+to be updated on each iteration. When a termination condition is met,
+the loop exits after evaluating the <VAR>expression</VAR>'s.
+
+
+<P>
+<CODE>do</CODE> expressions are evaluated as follows: The <VAR>init</VAR>
+expressions are evaluated (in sompe unspecified order), the
+<VAR>variable</VAR>'s are bound to fresh locations, the results of the
+<VAR>init</VAR> expressions are stored in the bindings of the
+<VAR>variable</VAR>'s, and then the iteration phase begins.
+
+
+<P>
+Each iteration begins by evaluating <VAR>test</VAR>; if the result is false,
+then the expressions in the <VAR>body</VAR> are evaluated in order for
+effect, the <VAR>step</VAR> expressions are evaluated in some unspecified
+order, the <VAR>variable</VAR>'s are bound to fresh locations, the results of
+the <VAR>step</VAR>'s are stored in the bindings of the <VAR>variable</VAR>'s, and
+the next iteration begins.
+
+
+<P>
+If <VAR>test</VAR> evaluates to a true value, then the <VAR>expression</VAR>'s in
+the <VAR>test-clause</VAR> evalutated from left to right and the value of the
+last <VAR>expression</VAR> is returned. If no <VAR>expression</VAR>'s are present,
+then the value of the <CODE>do</CODE> expression is unspecified.
+
+
+<P>
+Scope of the binding of a <VAR>variable</VAR> is the entire <CODE>do</CODE>
+expression except for the <VAR>init</VAR>'s. It is an error for a
+<VAR>variable</VAR> to appear more than once in the list of <CODE>do</CODE>
+variables.
+
+
+<P>
+A <VAR>step</VAR> may be omitted, in which case the effect is the same as if
+(<VAR>variable</VAR> <VAR>init</VAR> <VAR>variable</VAR>) had been written instead of
+(<VAR>variable</VAR> <VAR>init</VAR>).
+
+
+
+<PRE>
+(do ((vec (make-vector 5))
+     (i 0 (+ i 1)))
+    ((= i 5) vec)
+  (vector-set! vec i i))   ==&#62; #(0 1 2 3 4)
+
+(let ((x '(1 3 5 7 9)))
+  (do ((x x (cdr x))
+       (sum 0 (+ sum (car x))))
+      ((null? x) sum)))    ==&#62; 25
+ 
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>prog1</B> <I><VAR>expr1</VAR> <VAR>expr</VAR> ...</I>
+<DD><A NAME="IDX24"></A>
+Evaluates <VAR>expr1</VAR>, <VAR>expr</VAR>, ..., sequentially, and returns the
+value of <VAR>expr1</VAR>.
+
+
+
+<PRE>
+$car number.txt
+123
+$ ksm
+&#62; (let ((port (open-input-file "number.txt")))
+    (prog1 (read port)
+      (close-input-port port)))
+=&#62; 123
+</PRE>
+
+<P>
+@source{base/base.c}
+@use{none}
+</DL>
+
+
+
+
+<H2><A NAME="SEC13" HREF="ksm_toc.html#TOC13">Quasiquotation</A></H2>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>quasiquote</B> <I><VAR>qq-template</VAR></I>
+<DD><A NAME="IDX25"></A>
+<DT><U>Special Form:</U> <B>`<VAR>qq-template</VAR></B>
+<DD><A NAME="IDX26"></A>
+"Backquote" or "quasiquote" expressions are useful for constructing
+a list or vector structure when mose but not all of the desired
+structure is known in advance. If no commas appear within the
+<VAR>qq-template</VAR>, the result of evaluating `<VAR>qq-template</VAR> is
+equivalent to the result of evaluating '<VAR>qq-template</VAR>. If a comma
+appears within the <VAR>qq-template</VAR>, however, the expression following
+the comma is evaluated ("unquoted") and its result is inserted into
+the structure instead of the comma and the expression. If a comma
+appears followed immediately by an at-sign (@), then the following
+expression must evaluate to a list; the opening and closing parentheses
+of the list are then "stripped away" and the elements of the list are
+inserted in the place of the comma at-sign expression sequence. A comma
+at-sign should only appear within a list or vector <VAR>qq-template</VAR>.
+
+
+
+<PRE>
+`(list ,(+ 1 2) 4)      ==&#62; (list 3 4)
+(let ((name 'a))
+  `(list ,name ',name)) ==&#62; (list a (quote a))
+`(a ,(+ 1 2) ,@(map abs '(4 -5 6)) b)
+                        ==&#62; (a 3 4 5 6 b)
+`((foo ,(- 10 3)) ,@(cdr '(c)) . ,(car '(cons)))
+                        ==&#62; ((foo 7) . cons)
+`#(10 5 ,(sqrt 4) ,@(map sqrt '(16 9)) 8)
+                        ==&#62; #(10 5 2 4 3 8)
+</PRE>
+
+<P>
+Quasiquote forms may be nested. Substitutions are made only for unquoted
+components appearing at the same nesting level as the outermost
+backquote. The nesting level increases by one inside each successive
+quasiquotation, and decreases by one inside each unquotation.
+
+
+
+<PRE>
+`(a `(b ,(+ 1 2) ,(foo ,(+ 1 3) d) e) f)
+            ==&#62; (a `(b ,(+ 1 2) ,(foo 4 d) e) f)
+(let ((name1 'x)
+      (name2 'y))
+  `(a `(b ,,name1 ,',name2 d) e))
+            ==&#62; (a `(b ,x ,'y d) e)
+</PRE>
+
+<P>
+The two notations `<VAR>qq-template</VAR> and (<CODE>quasiquote</CODE>
+<VAR>qq-template</VAR>) are identical in all respects. ,<VAR>expression</VAR> is
+identical to (<CODE>unquote</CODE> <VAR>expression</VAR>), and ,@<VAR>expression</VAR>
+is identical to (unquote-splicing <VAR>expression</VAR>). 
+</DL>
+
+
+
+
+<H2><A NAME="SEC14" HREF="ksm_toc.html#TOC14">Macro</A></H2>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>define-syntax</B> <I><VAR>keyword</VAR> <VAR>transformer-spec</VAR></I>
+<DD><A NAME="IDX27"></A>
+Syntax definitions are valid only at the top level of a
+program. <VAR>keyword</VAR> is an identifier, and the <VAR>transformer-spec</VAR>
+should be an instance of <CODE>syntax-rules</CODE>. The top-level syntactic
+environment is extended by binding the <VAR>keyword</VAR> to the specified
+transformer.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>syntax-rules</B> <I><VAR>literals</VAR> <VAR>syntax-rule</VAR> ...</I>
+<DD><A NAME="IDX28"></A>
+<VAR>literals</VAR> is a list of identifiers and each <VAR>syntax-rule</VAR>
+should be of the form
+
+<PRE>
+(<VAR>pattern</VAR> <VAR>template</VAR>)
+</PRE>
+
+<P>
+The <VAR>pattern</VAR> in a <VAR>syntax-rule</VAR> is a list <VAR>pattern</VAR> that
+begins with the keyword for the macro.
+
+
+<P>
+A <VAR>pattern</VAR> is either an identifier, a constant, or one of the
+following.
+
+<PRE>
+(<VAR>pattern</VAR> ...)
+(<VAR>pattern</VAR> <VAR>pattern</VAR> ... . <VAR>pattern</VAR>)
+(<VAR>pattern</VAR> ... <VAR>pattern</VAR> <VAR>ellipsis</VAR>)
+#(<VAR>pattern</VAR> ...)
+#(<VAR>pattern</VAR> ... <VAR>pattern</VAR> <VAR>ellipsis</VAR>)
+</PRE>
+
+<P>
+and a template is either an identifier, a constant, or one of the
+following
+
+<PRE>
+(<VAR>element</VAR> ...)
+(<VAR>element</VAR> ... . <VAR>template</VAR>)
+#(<VAR>element</VAR> ....)
+</PRE>
+
+<P>
+where an <VAR>element</VAR> is a <VAR>template</VAR> optionally followed by an
+<VAR>ellipsis</VAR> and an <VAR>ellipsis</VAR> is the identifier "..." (which
+cannot be used as an identifier in either a template or a pattern).
+
+
+<P>
+An instance of <CODE>syntax-rules</CODE> produces a new macro transformer by
+specifying a sequence of hygienic rewrite rules. A use of a macro whose
+keyword is associated with a transformer specified by
+<CODE>syntax-rules</CODE> is matched against the patterns contained in the
+<VAR>syntax-rule</VAR>'s, beginning with the leftmost <VAR>syntax-rule</VAR>. When
+a match is found, the macro use is transcribed hygienically according to
+the template.
+
+
+<P>
+An identifier that appears in the pattern of a <VAR>syntax-rule</VAR> is a
+<EM>pattern variable</EM>, unless it is the keyword the begins the
+pattern, is listed in <VAR>literals</VAR>, or is the identifier
+"...". Pattern variables match arbitrary input elements and are used
+to refer to elements of the input in the template. It is an error for
+the same pattern variable to appear more than once in a <VAR>patter</VAR>.
+
+
+<P>
+Th keyword at the beginning of the pattern in a <VAR>syntax-rule</VAR> is not
+involved in the matching and is not considered a pattern variable or
+literal identifier.
+
+
+<P>
+Identifiers that appear in <VAR>literals</VAR> are interpreted as literal
+identifiers to be matched against corresponding subforms of the input. A
+subform in the input matches a literal identifier if the two identifiers
+are equal.
+
+
+<P>
+A subpattern followed by ... can match zero or more elements of the
+input. It is an error for ... to appear in <VAR>literals</VAR>. Within a
+pattern the identifier ... must follow the last element of a nonempty
+sequence of subpatterns.
+
+
+<P>
+More formally, an input form F matches a pattern P if and
+only if:
+
+
+
+<UL>
+<LI>
+
+P is a non-literal identifier; or
+
+<LI>
+
+P is a literal identifier and F is the equal identifier;
+or
+
+<LI>
+
+P is a list (P1 ... Pn) and F is a list of n forms that match P1 through
+Pn, respectively; or
+
+<LI>
+
+P is an improper list (P1 P2 ... Pn . Pn+1) and F is a list or improper
+list of n or more forms that match P1 through Pn, respectively, and
+whose n-th "cdr" matches Pn+1; or
+
+<LI>
+
+P is the form (P1 ... Pn Pn+1 <VAR>ellipsis</VAR>) where <VAR>ellipsis</VAR> is
+the identifier ... and F is a proper list of at least n forms, the first
+n of which match P1 through Pn, respectively, and each remaining element
+of F matches Pn+1; or
+
+<LI>
+
+P is a vector of the form #(P1 ... Pn) and F is a vector of n forms that
+match P1 through Pn; or
+
+<LI>
+
+P is of the form #(P1 ... Pn Pn+1 <VAR>ellipsis</VAR>) where <VAR>ellipsis</VAR>
+is the identifier ... and F is a vector of n or more forms, the first n
+of which match P1 through Pn, respectively, and each remaining element
+of F matches Pn+1; or
+
+<LI>
+
+P is a datum and F is equal to P in the sense of the <CODE>equal?</CODE>
+procedure.
+ 
+</UL>
+
+<P>
+It is an error to use a macro keyword, within the scope of its binding,
+in an expression that does not match any of the patterns.
+
+
+<P>
+When a macro use is transcribed according to the template of the
+matching <VAR>syntax-rule</VAR>, pattern variables that occur in the template
+are replaced by the subforms they match in the input. Pattern variables
+that occur in subpatterns followed by one or more instances of the
+identifier "..." are allowed only in subtemplates that are followed by
+as many instances of "...". They are replaced in the output by all of
+the subforms they match in the input, distributed as indicated. It is an
+error if the output cannot be built up as specified.
+
+
+<P>
+Identifiers that appear in the template but are not pattern variables or
+the identifier ... are inserted into the output as literal
+identifiers. If a literal identifier is inserted as a free identifier
+then it refers to the binding of that identifier within whose scope the
+instance of <CODE>syntax-rules</CODE> appears. If a literal identifier is
+inserted as a bound identifier then it is in effect renamed to prevent
+inadvertent captures of free identifiers.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>let-syntax</B> <I><VAR>bindings</VAR> <VAR>body</VAR></I>
+<DD><A NAME="IDX29"></A>
+<VAR>bindings</VAR> should have the form
+
+<PRE>
+((<VAR>keyword</VAR> <VAR>transformer-spec</VAR>) ...)
+</PRE>
+
+<P>
+Each <VAR>keyword</VAR> is an identifier, each <VAR>transformer-spec</VAR> is an
+instance of <CODE>syntax-rules</CODE>, and <VAR>body</VAR> should be a sequence of
+one or more expressions. It is an error for a <VAR>keyword</VAR> to appear
+more than once in the list of keywords being bound.
+
+
+<P>
+The <VAR>body</VAR> is expanded in the syntactic environment obtained by
+extending the syntactic environment of the <CODE>let-syntax</CODE> expression
+with macros whose keywords are the <VAR>keyword</VAR>'s, bound to the
+specified transformers. Scope of binding of a <VAR>keyword</VAR> is <VAR>body</VAR>.
+
+
+
+<PRE>
+(let-syntax ((when (syntax-rules ()
+                     ((when test stmt1 stmt2 ...)
+                      (if test
+                          (begin stmt1
+                                 stmt2 ...))))))
+  (let ((if #t))
+    (when if (set! if 'now))
+    if))                    ==&#62; now
+
+(let ((x 'outer))
+  (let-syntax ((m (syntax-rules () ((m) x))))
+    (let ((x 'inner))
+      (m))))                ==&#62; outer
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>letrec-syntax</B> <I><VAR>bindings</VAR> <VAR>body</VAR></I>
+<DD><A NAME="IDX30"></A>
+The <VAR>body</VAR> is expanded in the syntactic environment obtained by
+extending the syntactic environment of the <CODE>letrec-syntax</CODE>
+expression with macros whose keywords are the <VAR>keyword</VAR>'s, bound to
+the specified transformers. Scope of each binding of a <VAR>keyword</VAR> is
+the <VAR>bindings</VAR> as well as the <VAR>body</VAR>, so the transformers can
+transcribe expressions into uses of the macros introduced by the
+<CODE>letrec-syntax</CODE> expression.
+
+
+
+<PRE>
+(letrec-syntax
+  ((my-or (syntax-rules ()
+            ((my-or) #f)
+            ((my-or e) e)
+            ((my-or e1 e2 ...)
+             (let ((temp e1))
+               (if temp
+                   temp
+                   (my-or e2 ...)))))))
+  (let ((x #f)
+        (y 7)
+        (temp 8)
+        (let odd?)
+        (if even?))
+    (my-or x
+           (let temp)
+           (if y)
+           y)))       ==&#62; 7
+</PRE>
+
+</DL>
+
+
+
+<H2><A NAME="SEC15" HREF="ksm_toc.html#TOC15">Delayed Evaluation</A></H2>
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>delay</B> <I><VAR>expression</VAR></I>
+<DD><A NAME="IDX31"></A>
+The <CODE>delay</CODE> construct is used together with the procedure
+<CODE>force</CODE> to implement <EM>lazy evaluation</EM> or <EM>call by need.</EM>
+(<CODE>delay</CODE> <VAR>expression</VAR>) returns an object called a
+<EM>promise</EM> which at some point in the future may be asked (by the
+<CODE>force</CODE> procedure) to evaluate <VAR>expression</VAR>, and deliver the
+resulting value.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>force</B> <I><VAR>promise</VAR></I>
+<DD><A NAME="IDX32"></A>
+Forces the value of <VAR>promise</VAR>. If no value has been computed for the
+promise, then a value is computed and returned. The value of the promise
+is cached (or "memoized") so that if it is forced a second time, the
+previously computed value is returned.
+
+
+
+<PRE>
+(force (delay (+ 1 2)))       ==&#62; 3
+(let ((p (delay (+ 1 2))))
+  (list (force p) (force p))  ==&#62; (3 3)
+
+(define a-stream
+  (letrec ((next
+            (lambda (n)
+              (cons n (delay (next (+ n 1)))))))
+    (next 0)))
+(define head car)
+(define tail
+  (lambda (stream) (force (cdr stream))))
+(head (tail (tail a-stream))) ==&#62; 2
+</PRE>
+
+<P>
+<CODE>force</CODE> and <CODE>delay</CODE> are mainly intended for programs written
+in functional style. The following examples should not be considered to
+illustrate good programming style, but they illustrate the property that
+only one value is computed for a promise, no matter how many times it is
+forced. 
+
+
+
+<PRE>
+(define count 0)
+(define p
+  (delay (begin (set! count (+ count 1))
+                (if (&#62; count x)
+                    count
+                    (force p)))))
+(define x 5)
+p                         ==&#62; #&#60;promise&#62;
+(force p)                 ==&#62; 6
+p                         ==&#62; #&#60;promise&#62;
+(begin (set! x 10)
+       (force p))         ==&#62; 6
+</PRE>
+
+</DL>
+
+
+
+<H2><A NAME="SEC16" HREF="ksm_toc.html#TOC16">Equivalence</A></H2>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>eqv?</B> <I><VAR>obj1</VAR> <VAR>obj2</VAR></I>
+<DD><A NAME="IDX33"></A>
+The <CODE>eqv?</CODE> procedure defines a useful equivalence relation on
+objects. Briefly, it returns <CODE>#t</CODE> if <VAR>obj1</VAR> and <VAR>obj2</VAR>
+should normally be regarded as the same object. This relation is left
+slightly open to interpretation, but the following partial specification
+of <CODE>eqv?</CODE> holds for all implementations of Scheme
+
+
+<P>
+The <CODE>eqv?</CODE> procedure returns <CODE>#t</CODE> if:
+
+
+
+<UL>
+<LI>
+
+<VAR>obj1</VAR> and <VAR>obj2</VAR> are both <CODE>#t</CODE> or both <CODE>#f</CODE>
+
+<LI>
+
+<VAR>obj1</VAR> and <VAR>obj2</VAR> are both symbols and
+
+<PRE>
+(string=? (symbol-&#62;string obj1)
+          (symbol-&#62;string obj2))
+                            ==&#62; #t
+</PRE>
+
+<LI>
+
+<VAR>obj1</VAR> and <VAR>obj2</VAR> are both numbers, are numerically equal, and
+are either both exact or both inexact.
+
+<LI>
+
+<VAR>obj1</VAR> and <VAR>obj2</VAR> are both characters and are the same
+characters according to the <CODE>char=?</CODE> procedure.
+
+<LI>
+
+both <VAR>obj1</VAR> and <VAR>obj2</VAR> are the empty list.
+
+<LI>
+
+<VAR>obj1</VAR> and <VAR>obj2</VAR> are pairs, vectors, and strings that denote
+the same locations in the store.
+
+<LI>
+
+<VAR>obj1</VAR> and <VAR>obj2</VAR> are procedures whose location tags are equal.
+</UL>
+
+<P>
+The <CODE>eqv?</CODE> procedure returns <CODE>#f</CODE> if:
+
+
+
+<UL>
+<LI>
+
+<VAR>obj1</VAR> and <VAR>obj2</VAR> are of different types.
+
+<LI>
+
+one of <VAR>obj1</VAR> and <VAR>obj2</VAR> is <CODE>#t</CODE> but the other is
+<CODE>#f</CODE>.
+
+<LI>
+
+<VAR>obj1</VAR> and <VAR>obj2</VAR> are both symbols but
+
+<PRE>
+(string=? (symbol-&#62;string obj1)
+          (symbol-&#62;string obj2))
+                            ==&#62; #f
+</PRE>
+
+<LI>
+
+one of <VAR>obj1</VAR> and <VAR>obj2</VAR> is an exact number but the other is an
+inexact number.
+
+<LI>
+
+<VAR>obj1</VAR> and <VAR>obj2</VAR> are numbers for which the <CODE>=</CODE> procedure
+returns <CODE>#f</CODE>.
+
+<LI>
+
+<VAR>obj1</VAR> and <VAR>obj2</VAR> are characters for which the <CODE>char=?</CODE>
+procedure returns <CODE>#f</CODE>.
+
+<LI>
+
+one of <VAR>obj1</VAR> and <VAR>obj2</VAR> is the empty list but the other is not.
+
+<LI>
+
+<VAR>obj1</VAR> and <VAR>obj2</VAR> are pairs, vectors, or strings that denote
+distinct locations.
+
+<LI>
+
+<VAR>obj1</VAR> and <VAR>obj2</VAR> are procedures that would behave differently
+(return different value or have different side effects) for some arguments.
+
+</UL>
+
+
+<PRE>
+(eqv? 'a 'a)      ==&#62; #t
+(eqv? 'a 'b)      ==&#62; #f
+(eqv? 2 2)        ==&#62; #t
+(eqv? '() '())    ==&#62; #t
+(eqv? 100000000 100000000)   ==&#62; #t
+(eqv? (cons 1 2) (cons 1 2)) ==&#62; #f
+(eqv? (lambda () 1)
+      (lambda () 2))         ==&#62; #f
+(eqv? #f 'nil)               ==&#62; #f
+(let ((p (lambda (x) x)))
+  (eqv? p p))                ==&#62; #t
+</PRE>
+
+<P>
+The following examples in KSM-Scheme illustrate cases in which the boave
+rules do not fully specify the behavior of <CODE>eqv?</CODE>.
+
+
+
+<PRE>
+(eqv? "" "")                 ==&#62; #f in KSM-Scheme
+(eqv? '#() '#())             ==&#62; #f in KSM-Scheme
+(eqv? (lambda (x) x)
+      (lambda (x) x))        ==&#62; #f in KSM-Scheme
+(eqv? (lambda (x) x)
+      (lambda (y) y))        ==&#62; #f in KSM-Scheme
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>eq?</B> <I><VAR>obj1</VAR> <VAR>obj2</VAR></I>
+<DD><A NAME="IDX34"></A>
+<CODE>eq?</CODE> is similar to <CODE>eqv?</CODE> except that in some cases it is
+capable of discerning distinctions finer than those detectable by
+<VAR>eqv?</VAR>.
+
+
+<P>
+<CODE>eq?</CODE> and <CODE>eqv?</CODE> are guaranteed to have the same behavior on
+symbols, booleans, the empty list, pairs, procedures, and non-empty
+strings and vectors. <CODE>eq?</CODE>'s behavior on numbers and characters is
+implementation-dependent, but it will always return either true or
+false, and will return true only when <CODE>eqv?</CODE> would also return
+true. <CODE>eq?</CODE> may also behave differently from <CODE>eqv?</CODE> on empty
+vectors and empty strings.
+
+
+
+<PRE>
+(eq? 'a 'a)           ==&#62; #t
+(eq? '(a) '(a))       ==&#62; #f in KSM-Scheme
+(eq? (list 'a) (list 'a))  ==&#62; #f
+(eq? "a" "a")         ==&#62; #f in KSM-Scheme
+(eq? "" "")           ==&#62; #f in KSM-Scheme
+(eq? '() '())         ==&#62; #t
+(eq? 2 2)             ==&#62; #f in KSM-Scheme
+(eq? #\A #\A)         ==&#62; #f in KSM-Scheme
+(eq? car car)         ==&#62; #t
+(let ((n (+ 2 3)))
+  (eq? n n))          ==&#62; #t in KSM-Scheme
+(let ((x '(a)))
+  (eq? x x))          ==&#62; #t
+(let ((x '#()))
+  (eq? x x))          ==&#62; #t
+(let ((p (lambda (x) x)))
+  (eq? x x))          ==&#62; #t
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>equal?</B> <I><VAR>obj1</VAR> <VAR>obj2</VAR></I>
+<DD><A NAME="IDX35"></A>
+<CODE>equal?</CODE> recursively compares the contents of pairs, vectors, and
+strings, applying <CODE>eqv?</CODE> on other objects such as numbers and
+symbols. A rule of thumb is that objects are generally <CODE>equal?</CODE> if
+they print the same. <CODE>equal?</CODE> may fail to terminate if its
+arguments are circular data structures.
+
+
+
+<PRE>
+(equal? 'a 'a)        ==&#62; #t
+(equal? '(a) '(a))    ==&#62; #t
+(equal? '(a (b) c)
+        '(a (b) c))   ==&#62; #t
+(equal? "abc" "abc")  ==&#62; #t
+(equal? 2 2)          ==&#62; #t
+(equal? (make-vector 5 'a)
+        (make-vector 5 'a))  ==&#62; #t
+(equal? (lambda (x) x)
+        (lambda (y) y))      ==&#62; #f in KSM-Scheme
+</PRE>
+
+</DL>
+
+
+
+<H2><A NAME="SEC17" HREF="ksm_toc.html#TOC17">Numerical Operations</A></H2>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>number?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX36"></A>
+<DT><U>Function:</U> <B>complex?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX37"></A>
+<DT><U>Function:</U> <B>real?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX38"></A>
+<DT><U>Function:</U> <B>rational?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX39"></A>
+<DT><U>Function:</U> <B>integer?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX40"></A>
+These numerical type predicates can be applied to any kind of argument,
+including non-numbers. They return <CODE>#t</CODE> if the object is of the
+named type, and otherwise they return <CODE>#f</CODE>. In general, if a type
+predicate is true of a number then all higher type predicates are also
+true of that number. Consequently, if a type predicate is false of a
+number, then all lower type predicates are also false of that number.
+
+
+<P>
+If <VAR>z</VAR> is an inexact complex number, then (<CODE>real?</CODE> <VAR>z</VAR>) is
+true if and only if (<CODE>zero?</CODE> (<CODE>imag-part</CODE> <VAR>z</VAR>)) is
+true. If <VAR>x</VAR> is an inexact real number, then (<CODE>integer?</CODE>
+<VAR>x</VAR>) is true if and only if (<CODE>=</CODE> <VAR>x</VAR> (<CODE>round</CODE>
+<VAR>x</VAR>)).
+
+
+
+<PRE>
+(complex? 3+4i)         ==&#62; #t
+(complex? 3)            ==&#62; #t
+(real? 3)               ==&#62; #t
+(real? -2.5+0.0i)       ==&#62; #t
+(real? #e1e10)          ==&#62; #t
+(rational? 6/10)        ==&#62; #t
+(rational? 6/3)         ==&#62; #t
+(integer? 3+0i)         ==&#62; #t
+(integer? 3.0)          ==&#62; #t
+(integer? 8/4)          ==&#62; #t
+(integer? 6)            ==&#62; #t
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>exact?</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX41"></A>
+<DT><U>Function:</U> <B>inexact?</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX42"></A>
+These numerical predicates provide tests for the exactness of a
+quantity. For any Scheme number, precisely one of these predicates is
+true.
+
+
+
+<PRE>
+(exact? 1)              ==&#62; #t
+(exact? 1/2)            ==&#62; #t
+(exact? 1.2)            ==&#62; #f
+(exact? 1.0)            ==&#62; #f
+(inexact? 1.2)          ==&#62; #t
+(inexact? 1.0+2.0i)     ==&#62; #t
+(inexact? 1)            ==&#62; #f
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>=</B> <I><VAR>z1</VAR> <VAR>z2</VAR> <VAR>z3</VAR> ...</I>
+<DD><A NAME="IDX43"></A>
+<DT><U>Function:</U> <B>&#60;</B> <I><VAR>x1</VAR> <VAR>x2</VAR> <VAR>x3</VAR> ...</I>
+<DD><A NAME="IDX44"></A>
+<DT><U>Function:</U> <B>&#62;</B> <I><VAR>x1</VAR> <VAR>x2</VAR> <VAR>x3</VAR> ...</I>
+<DD><A NAME="IDX45"></A>
+<DT><U>Function:</U> <B>&#60;=</B> <I><VAR>x1</VAR> <VAR>x2</VAR> <VAR>x3</VAR> ...</I>
+<DD><A NAME="IDX46"></A>
+<DT><U>Function:</U> <B>&#62;=</B> <I><VAR>x1</VAR> <VAR>x2</VAR> <VAR>x3</VAR> ...</I>
+<DD><A NAME="IDX47"></A>
+These procedures return <CODE>#t</CODE> if their arguments are (respectively):
+equal, monotonically increasing, monotonically decreasing, monotonically
+nondecreasing, or monotonically noincreasing.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>zero?</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX48"></A>
+<DT><U>Function:</U> <B>positive?</B> <I><VAR>x</VAR></I>
+<DD><A NAME="IDX49"></A>
+<DT><U>Function:</U> <B>negative?</B> <I><VAR>x</VAR></I>
+<DD><A NAME="IDX50"></A>
+<DT><U>Function:</U> <B>odd?</B> <I><VAR>n</VAR></I>
+<DD><A NAME="IDX51"></A>
+<DT><U>Function:</U> <B>even?</B> <I><VAR>n</VAR></I>
+<DD><A NAME="IDX52"></A>
+These numerical predicates test a number for a particular property,
+returning <CODE>#t</CODE> or <CODE>#f</CODE>.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>max</B> <I><VAR>x1</VAR> <VAR>x2</VAR> ...</I>
+<DD><A NAME="IDX53"></A>
+<DT><U>Function:</U> <B>min</B> <I><VAR>x1</VAR> <VAR>x2</VAR> ...</I>
+<DD><A NAME="IDX54"></A>
+These procedures return the maximum or minimum of their arguments.
+
+
+
+<PRE>
+(max 3 4)        ==&#62; 4
+(max 3.9 4)      ==&#62; 4 in KSM-Scheme
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>+</B> <I><VAR>z1</VAR> ...</I>
+<DD><A NAME="IDX55"></A>
+<DT><U>Function:</U> <B>*</B> <I><VAR>z1</VAR> ...</I>
+<DD><A NAME="IDX56"></A>
+These procedures return the sum or product of their arguments.
+
+
+
+<PRE>
+(+ 3 4)          ==&#62; 7
+(+ 3)            ==&#62; 3
+(* 4)            ==&#62; 4
+(*)              ==&#62; 1
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>-</B> <I><VAR>z1</VAR> <VAR>z2</VAR></I>
+<DD><A NAME="IDX57"></A>
+<DT><U>Function:</U> <B>-</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX58"></A>
+<DT><U>Function:</U> <B>-</B> <I><VAR>z1</VAR> <VAR>z2</VAR> ...</I>
+<DD><A NAME="IDX59"></A>
+<DT><U>Function:</U> <B>/</B> <I><VAR>z1</VAR> <VAR>z2</VAR></I>
+<DD><A NAME="IDX60"></A>
+<DT><U>Function:</U> <B>/</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX61"></A>
+<DT><U>Function:</U> <B>/</B> <I><VAR>z1</VAR> <VAR>z2</VAR> ...</I>
+<DD><A NAME="IDX62"></A>
+With two or more arguments, these procedures return the difference or
+quotient of their arguments, associating to the left. With one argument,
+however, they return the additive or multiplicative inverse of their
+argument.
+
+
+
+<PRE>
+(- 3 4)           ==&#62; -1
+(- 3 4 5)         ==&#62; -6
+(- 3)             ==&#62; -3
+(/ 3 4 5)         ==&#62; 3/20
+(/ 3)             ==&#62; 1/3
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>abs</B> <I><VAR>x</VAR></I>
+<DD><A NAME="IDX63"></A>
+<CODE>abs</CODE> returns the absolute value of its argument.
+
+
+
+<PRE>
+(abs -7)          ==&#62; 7
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>quotient</B> <I><VAR>n1</VAR> <VAR>n2</VAR></I>
+<DD><A NAME="IDX64"></A>
+<DT><U>Function:</U> <B>remainder</B> <I><VAR>n1</VAR> <VAR>n2</VAR></I>
+<DD><A NAME="IDX65"></A>
+<DT><U>Function:</U> <B>modulo</B> <I><VAR>n1</VAR> <VAR>n2</VAR></I>
+<DD><A NAME="IDX66"></A>
+These procedures implement number-theoretic (integer) division. n2
+should be non-zero. All three procedures return integers. If n1/n2 is an
+integer:
+
+
+
+<PRE>
+(quotient n1 n2)  ==&#62; n1/n2
+(remainder n1 n2) ==&#62; 0
+(modulo n1 n2)    ==&#62; 0
+</PRE>
+
+<P>
+If n1/n2 is not an integer
+
+
+
+<PRE>
+(quotient n1 n2)  ==&#62; nq
+(remainder n1 n2) ==&#62; nr
+(modulo n1 n2)    ==&#62; nm
+</PRE>
+
+<P>
+where nq is n1/n2 rounded towards zero, 0 &#60; |nr| &#60; |n2|, 0 &#60; |nm| &#60;
+|n2|, nr and nm differ from n1 by a multiple of n2, nr has the same sign
+as n1, and nm has the same sign as n2.
+
+
+<P>
+From this we can conclude that for integers n1 and n2 with n2 not equal
+to 0,
+
+
+
+<PRE>
+(= n1 (+ (* n2 (quotient n1 n2))
+         (remainder n1 n2)))
+                  ==&#62; #t
+</PRE>
+
+<P>
+provided all numbers involved in that computation are exact.
+
+
+
+<PRE>
+(modulo 13 4)      ==&#62; 1
+(remainder 13 4)   ==&#62; 1
+(modulo -13 4)     ==&#62; 3
+(remainder -13 4)  ==&#62; -1
+(modulo 13 -4)     ==&#62; -3
+(remainder 13 -4)  ==&#62; 1
+(modulo -13 -4)    ==&#62; -1
+(remainder -13 -4) ==&#62; -1
+(remainder -13 -4.0) ==&#62; -1.0  ; inexact
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>gcd</B> <I><VAR>n1</VAR> ...</I>
+<DD><A NAME="IDX67"></A>
+<DT><U>Function:</U> <B>lcm</B> <I><VAR>n1</VAR> ...</I>
+<DD><A NAME="IDX68"></A>
+These procedures return the greatest common divisor or least common
+multiple of their arguments. The result is always non-negative.  In
+KSM-Scheme, each argument to these procedures should be an integer.
+
+
+
+<PRE>
+(gcd 32 -36)      ==&#62; 4
+(gcd)             ==&#62; 9
+(lcm 32 -36)      ==&#62; 288
+(lcm 32.0 -36)    ==&#62; #&#60;error&#62; in KSM-Scheme
+(lcm)             ==&#62; 1
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>numerator</B> <I><VAR>q</VAR></I>
+<DD><A NAME="IDX69"></A>
+<DT><U>Function:</U> <B>denominator</B> <I><VAR>q</VAR></I>
+<DD><A NAME="IDX70"></A>
+These procedures return the numerator or denominator of their argument;
+the result is computed as if the argument was represented as a fraction
+in lowest terms. The denominator is always positive. The denominator of
+0 is defined to be 1. In KSM-Scheme, each argument should be an integer
+or a rational number.
+
+
+
+<PRE>
+(numerator (/ 6 4))   ==&#62; 3
+(denominator (/ 6 4)) ==&#62; 2
+(denominator
+  (exact-&#62;inexact (/ 6 4))) ==&#62; #&#60;error&#62; in KSM-Scheme
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>floor</B> <I><VAR>x</VAR></I>
+<DD><A NAME="IDX71"></A>
+<DT><U>Function:</U> <B>ceiling</B> <I><VAR>x</VAR></I>
+<DD><A NAME="IDX72"></A>
+<DT><U>Function:</U> <B>truncate</B> <I><VAR>x</VAR></I>
+<DD><A NAME="IDX73"></A>
+<DT><U>Function:</U> <B>round</B> <I><VAR>x</VAR></I>
+<DD><A NAME="IDX74"></A>
+These procedures return integers. <CODE>floor</CODE> returns the largest
+integer not larger than <VAR>x</VAR>. <CODE>ceiling</CODE> returns the smallest
+integer not smaller than <VAR>x</VAR>. <CODE>truncate</CODE> returns the integer
+closest to <VAR>x</VAR> whose absolute value is not larger than the absolute
+value of <VAR>x</VAR>. If <VAR>x</VAR> is halfway between two integers,
+<CODE>round</CODE> returns the one with larger absolute value. This behavior
+is in accord with <CODE>rint()</CODE> in C library, and is different from
+Scheme Standard which states that <CODE>round</CODE> returns the even integer.
+
+
+
+<PRE>
+(floor -4.3)     ==&#62; -5.0
+(ceiling -4.3)   ==&#62; -4.0
+(truncate -4.3)  ==&#62; -4.0
+(round -4.3)     ==&#62; -4.0
+
+(floor 3.5)      ==&#62; 3.0
+(ceiling 3.5)    ==&#62; 4.0
+(truncate 3.5)   ==&#62; 3.0
+(round 3.5)      ==&#62; 4.0  ; inexact
+(round 4.5)      ==&#62; 5.0 in KSM-Scheme (it is 4.0 in Scheme Standard)
+(round 7/2)      ==&#62; 4.0  ; exact
+(round 7)        ==&#62; 7
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>rationalize</B> <I><VAR>x</VAR> <VAR>y</VAR></I>
+<DD><A NAME="IDX75"></A>
+<CODE>rationalize</CODE> procedure is not supported in KSM-Scheme. It is an
+error to call this procedure.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>exp</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX76"></A>
+<DT><U>Function:</U> <B>log</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX77"></A>
+<DT><U>Function:</U> <B>sin</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX78"></A>
+<DT><U>Function:</U> <B>cos</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX79"></A>
+<DT><U>Function:</U> <B>tan</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX80"></A>
+<DT><U>Function:</U> <B>asin</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX81"></A>
+<DT><U>Function:</U> <B>acos</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX82"></A>
+<DT><U>Function:</U> <B>atan</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX83"></A>
+<DT><U>Function:</U> <B>atan</B> <I><VAR>y</VAR> <VAR>x</VAR></I>
+<DD><A NAME="IDX84"></A>
+These procedures compute the usual transcendental functions. <CODE>log</CODE>
+computes the natural logarithm of <VAR>z</VAR> (not the base ten
+logarithm).
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>sqrt</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX85"></A>
+Returns the square root of <VAR>z</VAR>.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>expt</B> <I><VAR>z1</VAR> <VAR>z2</VAR></I>
+<DD><A NAME="IDX86"></A>
+Returns <VAR>z1</VAR> raised to the power <VAR>z2</VAR>.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>make-rectangular</B> <I><VAR>x</VAR> <VAR>y</VAR></I>
+<DD><A NAME="IDX87"></A>
+<DT><U>Function:</U> <B>make-polar</B> <I><VAR>r</VAR> <VAR>theta</VAR></I>
+<DD><A NAME="IDX88"></A>
+<DT><U>Function:</U> <B>real-part</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX89"></A>
+<DT><U>Function:</U> <B>imag-part</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX90"></A>
+<DT><U>Function:</U> <B>magnitude</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX91"></A>
+<DT><U>Function:</U> <B>angle</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX92"></A>
+Suppose x, y, r, theta are real numbers and z is a complex number such
+that z = x + y*i = r*exp(theta*i), then
+
+<PRE>
+(make-rectangular x y)    ==&#62; z
+(make-polar r theta)      ==&#62; z
+(real-part z)             ==&#62; x
+(imag-part z)             ==&#62; y
+(magnitude z)             ==&#62; |r|
+(angle z)                 ==&#62; theta
+</PRE>
+
+<P>
+unit of theta is radian.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>exact-&#62;inexact</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX93"></A>
+<DT><U>Function:</U> <B>inexact-&#62;exact</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX94"></A>
+<CODE>exact-&#62;inexact</CODE> returns an inexact representation of <VAR>z</VAR>. The
+value returned is the inexact number that is numerically closest to the
+argument. If <VAR>z</VAR> is an inexact number, it returns <VAR>z</VAR>.
+
+
+<P>
+<CODE>inexact-&#62;exact</CODE> returns an exact representation of <VAR>z</VAR>. The
+value returned is the exact number that is numerically closest to the
+argument. If <VAR>z</VAR> is an exact number, it returns <VAR>z</VAR>.
+</DL>
+
+
+
+
+<H2><A NAME="SEC18" HREF="ksm_toc.html#TOC18">Numerical I/O</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>number-&#62;string</B> <I><VAR>z</VAR></I>
+<DD><A NAME="IDX95"></A>
+<DT><U>Function:</U> <B>number-&#62;string</B> <I><VAR>z</VAR> <VAR>radix</VAR></I>
+<DD><A NAME="IDX96"></A>
+<VAR>radix</VAR> must be an exact integer, either 2, 8, 10, or 16. If
+omitted, <VAR>radix</VAR> defaults to 10. The procedure <CODE>number-&#62;string</CODE>
+takes a number and a radix and returns as a string an external
+representation of the given number in the given radix such that
+
+<PRE>
+(let ((number n)
+      (radix r))
+  (eqv? number
+        (string-&#62;number (number-&#62;string number radix)
+                        radix)))
+</PRE>
+
+<P>
+is true.
+
+
+<P>
+If <VAR>z</VAR> is other than an integer, the radix shoule be 10.
+
+
+<P>
+The result returned by <CODE>number-&#62;string</CODE> never contains an explicit
+radix prefix.
+
+
+
+<PRE>
+(number-&#62;string 100)    ==&#62; "100"
+(number-&#62;string 100 2)  ==&#62; "1100100"
+(number-&#62;string 100 8)  ==&#62; "144"
+(number-&#62;string 100 16) ==&#62; "64"
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>string-&#62;number</B> <I><VAR>string</VAR></I>
+<DD><A NAME="IDX97"></A>
+<DT><U>Function:</U> <B>string-&#62;number</B> <I><VAR>string</VAR> <VAR>radix</VAR></I>
+<DD><A NAME="IDX98"></A>
+Returns a number of the maximally precise representation expressed by
+the given <VAR>string</VAR>. <VAR>string</VAR> should not have an radix
+prefix. <VAR>radix</VAR> must be an exact integer, either 2, 8, 10, or 16. If
+omitted, <VAR>radix</VAR> defaults to 10. If <VAR>string</VAR> represents a number
+other than integer, <VAR>radix</VAR> should be 10.  If <VAR>string</VAR> does not
+represent valid a number, then <CODE>string-&#62;number</CODE> returns <CODE>#f</CODE>.
+
+
+
+<PRE>
+(string-&#62;number "64" 16)     ==&#62; 100
+(string-&#62;number "1100100" 2) ==&#62; 100
+(string-&#62;number "hello")     ==&#62; #f
+</PRE>
+
+</DL>
+
+
+
+<H2><A NAME="SEC19" HREF="ksm_toc.html#TOC19">Booleans</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>not</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX99"></A>
+Returns <CODE>#t</CODE> if <VAR>obj</VAR> is false, and returns <CODE>#f</CODE>
+otherwise.
+
+
+
+<PRE>
+(not #t)            ==&#62; #f
+(not 3)             ==&#62; #f
+(not (list 3))      ==&#62; #f
+(not #f)            ==&#62; #t
+(not '())           ==&#62; #f
+(not (list))        ==&#62; #f
+(not 'nil)          ==&#62; #f
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>boolean?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX100"></A>
+Returns <CODE>#t</CODE> if <VAR>obj</VAR> is either <CODE>#t</CODE> or <CODE>#f</CODE>, and
+returns <CODE>#f</CODE> otherwise.
+
+
+
+<PRE>
+(boolean? #f)      ==&#62; #t
+(boolean? #t)      ==&#62; #t
+(boolean? 0)       ==&#62; #f
+(boolean '())      ==&#62; #f
+</PRE>
+
+</DL>
+
+
+
+<H2><A NAME="SEC20" HREF="ksm_toc.html#TOC20">Pairs and Lists</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>pair?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX101"></A>
+Returns <CODE>#t</CODE> if <VAR>obj</VAR> is a pair, and otherwise returns
+<CODE>#f</CODE>.
+
+
+
+<PRE>
+(pair? '(a . b))   ==&#62; #t
+(pair? '(a b c))   ==&#62; #t
+(pair? '())        ==&#62; #f
+(pair? '#(a b))    ==&#62; #f
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>cons</B> <I><VAR>obj1</VAR> <VAR>obj2</VAR></I>
+<DD><A NAME="IDX102"></A>
+Returns a newly allocated pair whose car is <VAR>obj1</VAR> and whose cdr is
+<VAR>obj2</VAR>. The pair is guaranteed to be different (in the sense of
+<CODE>eqv?</CODE>) from every existing object.
+
+
+
+<PRE>
+(cons 'a '())         ==&#62; (a)
+(cons '(a) '(b c d))  ==&#62; ((a) b c d)
+(cons "a" '(b c))     ==&#62; ("a" b c)
+(cons 'a 3)           ==&#62; (a . 3)
+(cons '(a b) 'c)      ==&#62; ((a b) . c)
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>car</B> <I><VAR>pair</VAR></I>
+<DD><A NAME="IDX103"></A>
+Returns the content of the car field of <VAR>pair</VAR>. Note that it is an
+error to take the car of the empty list.
+
+
+
+<PRE>
+(car '(a b c))        ==&#62; a
+(car '((a) b c d))    ==&#62; (a)
+(car '(1 . 2))        ==&#62; 1
+(car '())             ==&#62; #&#60;error&#62;
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>cdr</B> <I><VAR>pair</VAR></I>
+<DD><A NAME="IDX104"></A>
+Returns the content of the cdr field of <VAR>pair</VAR>. Note that it is an
+error to take the cdr of the empty list.
+
+
+
+<PRE>
+(cdr '((a) b c d))    ==&#62; (b c d)
+(cdr '(1 . 2))        ==&#62; 2
+(cdr '())             ==&#62; #&#60;error&#62;
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>set-car!</B> <I><VAR>pair</VAR> <VAR>obj</VAR></I>
+<DD><A NAME="IDX105"></A>
+Stores <VAR>obj</VAR> in the car field of <VAR>pair</VAR>. The value returned by
+<CODE>set-car!</CODE> is unspecified.
+
+
+
+<PRE>
+(define p (cons 1 2))
+p                     ==&#62; (1 . 2)
+(set-car! p 3)   
+p                     ==&#62; (3 . 2)
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>set-cdr!</B> <I><VAR>pair</VAR> <VAR>obj</VAR></I>
+<DD><A NAME="IDX106"></A>
+Stores <VAR>obj</VAR> in the cdr field of <VAR>pair</VAR>. The value returned by
+<CODE>set-cdr!</CODE> is unspecified.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>caar</B> <I><VAR>pair</VAR></I>
+<DD><A NAME="IDX107"></A>
+<DT><U>Function:</U> <B>cadr</B> <I><VAR>pair</VAR></I>
+<DD><A NAME="IDX108"></A>
+  ...
+<DT><U>Function:</U> <B>cdddar</B> <I><VAR>pair</VAR></I>
+<DD><A NAME="IDX109"></A>
+<DT><U>Function:</U> <B>cddddr</B> <I><VAR>pair</VAR></I>
+<DD><A NAME="IDX110"></A>
+These procedures are compositions of <CODE>car</CODE> and <CODE>cdr</CODE>, where
+for example <CODE>caddr</CODE> could be defined by
+
+<PRE>
+(define caddr (lambda (x) (car (cdr (cdr x)))))
+</PRE>
+
+<P>
+Arbitrary compositions, up to four deep, are provided. There are
+twenty-eight of these procedures in all.
+
+
+
+<PRE>
+(caar '((a b) (c d)))   ==&#62; a
+(cdadr '((a b) (c d)))  ==&#62; (d)
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>null?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX111"></A>
+Returns <CODE>#t</CODE> if <VAR>obj</VAR> is the empty list, otherwise returns
+<CODE>#f</CODE>.
+
+
+
+<PRE>
+(null? '())        ==&#62; #t
+(null? '(1))       ==&#62; #f
+(null? 'a)         ==&#62; #f
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>list?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX112"></A>
+Returns <CODE>#t</CODE> if <VAR>obj</VAR> is a list, otherwise returns
+<CODE>#f</CODE>. By definition, all lists have finite length and are
+terminated by the empty list.
+
+
+
+<PRE>
+(list? '(a b c))   ==&#62; #t
+(list? '())        ==&#62; #t
+(list? '(a . b))   ==&#62; #f
+(let ((x (list 'a)))
+  (set-cdr! x x)
+  (list? x))       ==&#62; #f
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>list</B> <I><VAR>obj</VAR> ...</I>
+<DD><A NAME="IDX113"></A>
+Returns a newly allocated list of its arguments.
+
+
+
+<PRE>
+(list 'a (+ 3 4) 'c)    ==&#62; (a 7 c)
+(list)                  ==&#62; ()
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>length</B> <I><VAR>list</VAR></I>
+<DD><A NAME="IDX114"></A>
+Returns the length of <VAR>list</VAR>.
+
+
+
+<PRE>
+(length '(a b c))          ==&#62; 3
+(length '(a (b) (c d e)))  ==&#62; 3
+(length '())               ==&#62; 0
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>append</B> <I><VAR>list</VAR> ...</I>
+<DD><A NAME="IDX115"></A>
+Returns a list consisting of the elements of the first <VAR>list</VAR>
+followed by the elements of the other <VAR>lists</VAR>.
+
+
+
+<PRE>
+(append '(x) '(y))         ==&#62; (x y)
+(append '(a) '(b c d))     ==&#62; (a b c d)
+(append '(a (b)) '((c)))   ==&#62; (a (b) (c))
+</PRE>
+
+<P>
+The resulting list is always newly allocated, except that it shares
+structure with the last <VAR>list</VAR> argument. The last argument may
+actually be any object; an improper list results if the last argument is
+not a proper list.
+
+
+
+<PRE>
+(append '(a b) '(c . d))   ==&#62; (a b c . d)
+(append '() 'a)            ==&#62; a
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>reverse</B> <I><VAR>list</VAR></I>
+<DD><A NAME="IDX116"></A>
+Returns a newly allocated list consisting of the elements of <VAR>list</VAR>
+in reverse order.
+
+
+
+<PRE>
+(reverse '(a b c))              ==&#62; (c b a)
+(reverse '(a (b c) d (e (f))))  ==&#62; ((e (f)) d (b c) a)
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>list-tail</B> <I><VAR>list</VAR> <VAR>k</VAR></I>
+<DD><A NAME="IDX117"></A>
+Returns the sublist of <VAR>list</VAR> obtained by omitting the first <VAR>k</VAR>
+elements. It is an error if <VAR>list</VAR> has fewer than <VAR>k</VAR> elements.
+
+
+
+<PRE>
+(list-tail '(1 2 3 4 5) 2)      ==&#62; (3 4 5)
+(list-tail '(1 2 3 4 5) 0)      ==&#62; (1 2 3 4 5)
+(list-tail '(1 2 3 4 5) 5)      ==&#62; ()
+(list-tail '(1 2 3 4 5) 6)      ==&#62; #&#60;error&#62;
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>list-ref</B> <I><VAR>list</VAR> <VAR>k</VAR></I>
+<DD><A NAME="IDX118"></A>
+Returns the <VAR>k</VAR>-th element of <VAR>list</VAR>. The 0-th element implies
+the first element.  It is an error if <VAR>list</VAR> has fewer than <VAR>k</VAR>
+elements.
+
+
+
+<PRE>
+(list-ref '(1 2 3 4 5) 0)   ==&#62; 1
+(list-ref '(1 2 3 4 5) 2)   ==&#62; 3
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>memq</B> <I><VAR>obj</VAR> <VAR>list</VAR></I>
+<DD><A NAME="IDX119"></A>
+<DT><U>Function:</U> <B>memv</B> <I><VAR>obj</VAR> <VAR>list</VAR></I>
+<DD><A NAME="IDX120"></A>
+<DT><U>Function:</U> <B>member</B> <I><VAR>obj</VAR> <VAR>list</VAR></I>
+<DD><A NAME="IDX121"></A>
+These procedures return the first sublist of <VAR>list</VAR> whose car is
+<VAR>obj</VAR>, where the sublists of <VAR>list</VAR> are the non-empty lists
+returned by (list-tail list k) for k less than the length of list. If
+<VAR>obj</VAR> does not occur in <VAR>list</VAR>, then <CODE>#f</CODE> (not the empty
+list) is returned. <CODE>memq</CODE> uses <CODE>eq?</CODE> to compare <VAR>obj</VAR> with
+the elements of <VAR>list</VAR>, while <CODE>memv</CODE> uses <CODE>eqv?</CODE> and
+<CODE>member</CODE> uses <CODE>equal?</CODE>.
+
+
+
+<PRE>
+(memq 'a '(a b c))          ==&#62; (a b c)
+(memq 'b '(a b c))          ==&#62; (b c)
+(memq 'a '(b c d))          ==&#62; #f
+(memq (list 'a) '(b (a) c)) ==&#62; #f
+(member (list 'a)
+        '(b (a) c))         ==&#62; ((a) c)
+(memq 101 '(100 101 102))   ==&#62; #f in KSM-Scheme
+(memv 101 '(100 101 102))   ==&#62; (101 102)
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>assq</B> <I><VAR>obj</VAR> <VAR>alist</VAR></I>
+<DD><A NAME="IDX122"></A>
+<DT><U>Function:</U> <B>assv</B> <I><VAR>obj</VAR> <VAR>alist</VAR></I>
+<DD><A NAME="IDX123"></A>
+<DT><U>Function:</U> <B>assoc</B> <I><VAR>obj</VAR> <VAR>alist</VAR></I>
+<DD><A NAME="IDX124"></A>
+<VAR>alist</VAR> (for "association list") must be a list of pairs. These
+procedures find the first pair in <VAR>alist</VAR> whose car field is
+<VAR>obj</VAR>, and returns that pair. If no pair in <VAR>alist</VAR> has
+<VAR>obj</VAR> as its car, then <CODE>#f</CODE> (not the empty list) is
+returned. <CODE>assq</CODE> uses <CODE>eq?</CODE> to compare <CODE>obj</CODE> with the car
+fields of the pairs in <VAR>alist</VAR>, while <CODE>assv</CODE> uses <CODE>eqv?</CODE>
+and <CODE>assoc</CODE> uses <CODE>equal?</CODE>.
+
+
+
+<PRE>
+(define e '((a 1) (b 2) (c 3)))
+(assq 'a e)              ==&#62; (a 1)
+(assq 'b e)              ==&#62; (b 2)
+(assq 'd e)              ==&#62; #f
+(assq (list 'a) '(((a)) ((b)) ((c))))
+                         ==&#62; #f
+(assoc (list 'a) '(((a)) ((b)) ((c))))
+                         ==&#62; ((a))
+(assq 5 '((2 3) (5 7) (11 13)))
+                         ==&#62; #f in KSM-Scheme
+(assv 5 '((2 3) (5 7) (11 13)))
+                         ==&#62; (5 7)
+</PRE>
+
+</DL>
+
+
+
+<H2><A NAME="SEC21" HREF="ksm_toc.html#TOC21">Symbol</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>symbol?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX125"></A>
+Returns <CODE>#t</CODE> if <VAR>obj</VAR> is a symbol, otherwise returns <CODE>#f</CODE>.
+
+
+
+<PRE>
+(symbol? 'foo)         ==&#62; #t
+(symbol? (car '(a b))) ==&#62; #t
+(symbol? "bar")        ==&#62; #f
+(symbol? 'nil)         ==&#62; #t
+(symbol? '())          ==&#62; #f
+(symbol? #f)           ==&#62; #f
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>symbol-&#62;string</B> <I><VAR>symbol</VAR></I>
+<DD><A NAME="IDX126"></A>
+Returns the name of <VAR>symbol</VAR> as a string. KSM-Scheme is
+case-sensitive. Therefore, case of each character in the <VAR>symbol</VAR> is
+preserved in the returned string.
+
+
+
+<PRE>
+(symbol-&#62;string 'flying-fish)  ==&#62; "flying-fish"
+(symbol-&#62;string 'Martin)       ==&#62; "Martin" in KSM-Scheme
+(symbol-&#62;string 
+  (string-&#62;symbol "Malvina"))  ==&#62; "Malvina"
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>string-&#62;symbol</B> <I><VAR>string</VAR></I>
+<DD><A NAME="IDX127"></A>
+Returns the symbol whose name is <VAR>string</VAR>.
+
+
+
+<PRE>
+(eq? 'mISSISSIpi 'mississippi)  ==&#62; #f in KSM-Scheme
+(string-&#62;symbol "mISSISSIppi")  ==&#62; mISSISSIppi
+(eq? 'bitBLT (string-&#62;symbol "bitBLT"))
+                                ==&#62; #t in KSM-Scheme
+(eq? 'JollyWog
+     (string-&#62;symbol
+       (symbol-&#62;string 'JollyWog)))
+                                ==&#62; #t
+(string=? "K. Harper, M.D."
+          (symbol-&#62;string
+            (string-&#62;symbol "K. Harper, M.D.")))
+                                ==&#62; #t
+</PRE>
+
+</DL>
+
+
+
+<H2><A NAME="SEC22" HREF="ksm_toc.html#TOC22">Character</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>char?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX128"></A>
+Returns <CODE>#t</CODE> if <VAR>obj</VAR> is a character, otherwise returns
+<CODE>#f</CODE>.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>char=?</B> <I><VAR>char1</VAR> <VAR>char2</VAR></I>
+<DD><A NAME="IDX129"></A>
+<DT><U>Function:</U> <B>char&#60;?</B> <I><VAR>char1</VAR> <VAR>char2</VAR></I>
+<DD><A NAME="IDX130"></A>
+<DT><U>Function:</U> <B>char&#62;?</B> <I><VAR>char1</VAR> <VAR>char2</VAR></I>
+<DD><A NAME="IDX131"></A>
+<DT><U>Function:</U> <B>char&#60;=?</B> <I><VAR>char1</VAR> <VAR>char2</VAR></I>
+<DD><A NAME="IDX132"></A>
+<DT><U>Function:</U> <B>char&#62;=?</B> <I><VAR>char1</VAR> <VAR>char2</VAR></I>
+<DD><A NAME="IDX133"></A>
+These procedures impose a total ordering on the set of characters. In
+KSM-Scheme, the ordering represents the Unicode code value of the
+characters.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>char-ci=?</B> <I><VAR>char1</VAR> <VAR>char2</VAR></I>
+<DD><A NAME="IDX134"></A>
+<DT><U>Function:</U> <B>char-ci&#60;?</B> <I><VAR>char1</VAR> <VAR>char2</VAR></I>
+<DD><A NAME="IDX135"></A>
+<DT><U>Function:</U> <B>char-ci&#62;?</B> <I><VAR>char1</VAR> <VAR>char2</VAR></I>
+<DD><A NAME="IDX136"></A>
+<DT><U>Function:</U> <B>char-ci&#60;=?</B> <I><VAR>char1</VAR> <VAR>char2</VAR></I>
+<DD><A NAME="IDX137"></A>
+<DT><U>Function:</U> <B>char-ci&#62;=?</B> <I><VAR>char1</VAR> <VAR>char2</VAR></I>
+<DD><A NAME="IDX138"></A>
+These procedures are similar to <CODE>char=?</CODE> et cetera, but they treat
+upper case and lower case letters as the same. In KSM-Scheme, case of
+characters outside the ASCII range (outside 0x00-0x7f) is handled
+properly. 
+
+
+
+<PRE>
+(char-ci=? #\A #\a)             ==&#62; #t
+(char-ci=? #\U{2174} #\U{2164}) ==&#62; #t
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>char-alphabetic?</B> <I><VAR>char</VAR></I>
+<DD><A NAME="IDX139"></A>
+<DT><U>Function:</U> <B>char-numeric?</B> <I><VAR>char</VAR></I>
+<DD><A NAME="IDX140"></A>
+<DT><U>Function:</U> <B>char-whitespace?</B> <I><VAR>char</VAR></I>
+<DD><A NAME="IDX141"></A>
+<DT><U>Function:</U> <B>char-upper-case?</B> <I><VAR>char</VAR></I>
+<DD><A NAME="IDX142"></A>
+<DT><U>Function:</U> <B>char-lower-case?</B> <I><VAR>char</VAR></I>
+<DD><A NAME="IDX143"></A>
+These procedures return <CODE>#t</CODE> if their arguments are alphabetic,
+numeric, whitespace, upper case, or lower case characters, respectively,
+otherwise they return <CODE>#f</CODE>. In KSM-Scheme, <CODE>char-alphabetic?</CODE>,
+<CODE>char-numeric?</CODE>, and <CODE>char-whitespace?</CODE> currently support
+characters in the ASCII range (0x00 through 0x7f). For characters
+outside this range, they return <CODE>#f</CODE>. <CODE>char-upper-case?</CODE> and
+<CODE>char-lower-case?</CODE> support all the Unicode characters.
+
+
+
+<PRE>
+(char-alphabetic? #\a)     ==&#62; #t
+(char-numeric? #\2)        ==&#62; #t
+(char-whitespace #\space)  ==&#62; #t
+(char-upper-case? #\A)     ==&#62; #t
+(char-lower-case? #\a)     ==&#62; #t
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>char-&#62;integer</B> <I><VAR>char</VAR></I>
+<DD><A NAME="IDX144"></A>
+<DT><U>Function:</U> <B>integer-&#62;char</B> <I><VAR>n</VAR></I>
+<DD><A NAME="IDX145"></A>
+Given a character, <CODE>char-&#62;integer</CODE> returns an integer that is the
+Unicode code value of the character.  Given an integer,
+<CODE>integer-&#62;char</CODE> interpretes the number as a Unicode code value and
+returns a character corresponding to that code.
+
+
+
+<PRE>
+(char-&#62;integer #\a)   ==&#62; 97
+(integer-&#62;char 90)    ==&#62; #\Z
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>char-upcase</B> <I><VAR>char</VAR></I>
+<DD><A NAME="IDX146"></A>
+<DT><U>Function:</U> <B>char-downcase</B> <I><VAR>char</VAR></I>
+<DD><A NAME="IDX147"></A>
+<CODE>char-upcase</CODE> returns the upper case of the <VAR>char</VAR> if there is
+one, otherwise returns the <VAR>char</VAR> itself.  <CODE>char-downcase</CODE>
+returns the lower case of the <VAR>char</VAR> if there is one, otherwise
+returns the <VAR>char</VAR> itself. Both procedures support all Unicode
+characters.
+</DL>
+
+
+
+
+<H2><A NAME="SEC23" HREF="ksm_toc.html#TOC23">String</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>string?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX148"></A>
+Returns <CODE>#t</CODE> if <VAR>obj</VAR> is a string, otherwise returns <CODE>#f</CODE>.
+
+
+
+<PRE>
+(string? "abc")   ==&#62; #t
+(string? 'abc)    ==&#62; #f
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>make-string</B> <I><VAR>k</VAR></I>
+<DD><A NAME="IDX149"></A>
+<DT><U>Function:</U> <B>make-string</B> <I><VAR>k</VAR> <VAR>char</VAR></I>
+<DD><A NAME="IDX150"></A>
+<CODE>make-string</CODE> returns a newly allocated string of length
+<VAR>k</VAR>. If <VAR>char</VAR> is given, then all elements of the string are
+initialized to <VAR>char</VAR>, otherwise the contents of the <VAR>string</VAR>
+are unspecified except its length.
+
+
+
+<PRE>
+(make-string 3 #\a)  ==&#62; "aaa"
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>string</B> <I><VAR>char</VAR> ...</I>
+<DD><A NAME="IDX151"></A>
+Returns a newly allocated string composed of the arguments.
+
+
+
+<PRE>
+(string #\h #\e #\l #\l #\o)  ==&#62; "hello"
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>string-length</B> <I><VAR>string</VAR></I>
+<DD><A NAME="IDX152"></A>
+Returns the number of characters in the given <VAR>string</VAR>. 
+
+
+
+<PRE>
+(string-length "abcdefg")   ==&#62; 7
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>string-ref</B> <I><VAR>string</VAR> <VAR>k</VAR></I>
+<DD><A NAME="IDX153"></A>
+<VAR>k</VAR> must be a valid index of <VAR>string</VAR> (that is, 0 &#60;= <VAR>k</VAR> and
+<VAR>k</VAR> &#60; length of <VAR>string</VAR>). <CODE>string-ref</CODE> returns character
+<VAR>k</VAR> of <VAR>string</VAR> using zero-origin indexing.
+
+
+
+<PRE>
+(string-ref "abcdefg" 0)  ==&#62; #\a
+(string-ref "abcdefg" 2)  ==&#62; #\c
+(string-ref "abcdefg" 7)  ==&#62; #&#60;error&#62;
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>string-set!</B> <I><VAR>string</VAR> <VAR>k</VAR> <VAR>char</VAR></I>
+<DD><A NAME="IDX154"></A>
+<VAR>k</VAR> must be a valid index of <VAR>string</VAR> (that is, 0 &#60;= <VAR>k</VAR> and
+<VAR>k</VAR> &#60; length of <VAR>string</VAR>). <CODE>string-set!</CODE> stores <VAR>char</VAR>
+in element <VAR>k</VAR> (zero-origin indexing) and returns an unspecified
+value.
+
+
+
+<PRE>
+(define str "abcdefg")
+str                       ==&#62; "abcdefg"
+(string-set! str 2 #\X)   ==&#62; #&#60;unspecified&#62;
+str                       ==&#62; "abXdefg"
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>string=?</B> <I><VAR>string1</VAR> <VAR>string2</VAR></I>
+<DD><A NAME="IDX155"></A>
+<DT><U>Function:</U> <B>string-ci=?</B> <I><VAR>string1</VAR> <VAR>string2</VAR></I>
+<DD><A NAME="IDX156"></A>
+<CODE>string=?</CODE> returns <CODE>#t</CODE> if the two strings are the same length
+and contain the same characters in the same positions, otherwise returns
+<CODE>#f</CODE>. <CODE>string-ci=?</CODE> is similar to <VAR>string=?</VAR> except that
+it treats upper and lower case letters as though they were the same
+character. <CODE>string-ci=?</CODE> supports all Unicode characters.
+
+
+
+<PRE>
+(string=? "abcdefg" "abcdefg")     ==&#62; #t
+(string=? "ABCdefg" "abcdefg")     ==&#62; #f
+(string-ci=? "ABCdefg" "abcdefg")  ==&#62; #t
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>string&#60;?</B> <I><VAR>string1</VAR> <VAR>string2</VAR></I>
+<DD><A NAME="IDX157"></A>
+<DT><U>Function:</U> <B>string&#62;?</B> <I><VAR>string1</VAR> <VAR>string2</VAR></I>
+<DD><A NAME="IDX158"></A>
+<DT><U>Function:</U> <B>string&#60;=?</B> <I><VAR>string1</VAR> <VAR>string2</VAR></I>
+<DD><A NAME="IDX159"></A>
+<DT><U>Function:</U> <B>string&#62;=?</B> <I><VAR>string1</VAR> <VAR>string2</VAR></I>
+<DD><A NAME="IDX160"></A>
+<DT><U>Function:</U> <B>string-ci&#60;?</B> <I><VAR>string1</VAR> <VAR>string2</VAR></I>
+<DD><A NAME="IDX161"></A>
+<DT><U>Function:</U> <B>string-ci&#62;?</B> <I><VAR>string1</VAR> <VAR>string2</VAR></I>
+<DD><A NAME="IDX162"></A>
+<DT><U>Function:</U> <B>string-ci&#60;=?</B> <I><VAR>string1</VAR> <VAR>string2</VAR></I>
+<DD><A NAME="IDX163"></A>
+<DT><U>Function:</U> <B>string-ci&#62;=?</B> <I><VAR>string1</VAR> <VAR>string2</VAR></I>
+<DD><A NAME="IDX164"></A>
+These procedures compares the ordering of the two <VAR>strings</VAR> and
+returns <VAR>#t</VAR> or <VAR>#f</VAR>. For example, <CODE>string&#60;?</CODE> uses the
+lexicographic ordering on strings induced by the ordering <CODE>char&#60;?</CODE>
+on characters. If two strings differ in length but are the same up to
+the length of the shorter string, the shorter string is considered to be
+lexicographically less than the longer string.
+
+
+
+<PRE>
+(string&#60;?  "ABCDEFG" "abcdefg")     ==&#62; #f
+(string-ci&#60;?  "ABCDEFG" "abcdefg")  ==&#62; #t
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>substring</B> <I><VAR>string</VAR> <VAR>start</VAR> <VAR>end</VAR></I>
+<DD><A NAME="IDX165"></A>
+<VAR>string</VAR> must be a string, and <VAR>start</VAR> and <VAR>end</VAR> must be
+integers satisfying
+
+<PRE>
+0 &#60;= <VAR>start</VAR> &#60;= <VAR>end</VAR> &#60;= length of <VAR>string</VAR>
+</PRE>
+
+<P>
+<CODE>substring</CODE> returns a newly allocated string formed from the
+characters of <VAR>string</VAR> beginning with index <VAR>start</VAR> (inclusive)
+and ending with index <VAR>end</VAR> (exclusive).
+
+
+
+<PRE>
+(substring "abcdefg" 2 4) ==&#62; "cd"
+(substring "abcdefg" 0 7) ==&#62; "abcdefg"
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>string-append</B> <I><VAR>string</VAR> ...</I>
+<DD><A NAME="IDX166"></A>
+Returns a newly allocated string whose characters form the concatenation
+of the given strings.
+
+
+
+<PRE>
+(string-append "abc" "d" "efg")  ==&#62; "abcdefg"
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>string-&#62;list</B> <I><VAR>string</VAR></I>
+<DD><A NAME="IDX167"></A>
+<DT><U>Function:</U> <B>list-&#62;string</B> <I><VAR>list</VAR></I>
+<DD><A NAME="IDX168"></A>
+<CODE>string-&#62;list</CODE> returns a newly allocated list of the characters
+that make up the given string. <CODE>list-&#62;string</CODE> returns a newly
+allocated string formed from the characters in the <VAR>list</VAR>, which
+must be a list of characters. <CODE>string-&#62;list</CODE> and
+<CODE>list-&#62;string</CODE> are inverses so far as <CODE>equal?</CODE> is concerned.
+
+
+
+<PRE>
+(string-&#62;list "hello")  ==&#62; (#\h #\e #\l #\l #\o)
+(list-&#62;string '(#\h #\e #\l #\l #\o))  ==&#62; "hello"
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>string-copy</B> <I><VAR>string</VAR></I>
+<DD><A NAME="IDX169"></A>
+Returns a newly allocated copy of the given <VAR>string</VAR>.
+
+
+
+<PRE>
+(string-copy "abcdefg")                 ==&#62; "abcdefg"
+(eq? "abcdefg" (string-copy "abcdefg")) ==&#62; #f
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>string-fill!</B> <I><VAR>string</VAR> <VAR>char</VAR></I>
+<DD><A NAME="IDX170"></A>
+Stores <VAR>char</VAR> in every element of the given <VAR>string</VAR> and returns
+an unspecified value.
+
+
+
+<PRE>
+(define str "abcdefg")
+str                     ==&#62; "abcdefg"
+(string-fill! str #\X)  ==&#62; "XXXXXXX"
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>string-&#62;expr</B> <I><VAR>string</VAR></I>
+<DD><A NAME="IDX171"></A>
+Reads a Scheme expression from <VAR>string</VAR> by the Scheme reader and
+returns the expression.
+
+
+
+<PRE>
+(string-&#62;expr "10")      ==&#62; 10 
+(string-&#62;expr "(a b c)") ==&#62; (a b c)
+</PRE>
+
+<P>
+@source{base/base.c}
+@use{none}
+</DL>
+
+
+
+
+<H2><A NAME="SEC24" HREF="ksm_toc.html#TOC24">Vector</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>vector?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX172"></A>
+Returns <CODE>#t</CODE> if <VAR>obj</VAR> is a vector, otherwise returns <CODE>#f</CODE>.
+
+
+
+<PRE>
+(vector? '#(1 2 3))   ==&#62; #t
+(vector? '(1 2 3))    ==&#62; #f
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>make-vector</B> <I><VAR>k</VAR></I>
+<DD><A NAME="IDX173"></A>
+<DT><U>Function:</U> <B>make-vector</B> <I><VAR>k</VAR> <VAR>fill</VAR></I>
+<DD><A NAME="IDX174"></A>
+Returns a newly allocated vector of <VAR>k</VAR> elements. If a second
+argument is given, then each element is initialized to
+<VAR>fill</VAR>. Otherwise the initial contents of each element is
+unspecified.
+
+
+
+<PRE>
+(make-vector 3 #\a)   ==&#62; #(a a a)
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>vector</B> <I><VAR>obj</VAR> ...</I>
+<DD><A NAME="IDX175"></A>
+Returns a newly allocated vector whose elements contain the given
+arguments. Analogous to <CODE>list</CODE>.
+
+
+
+<PRE>
+(vector 'a 'b 'c)     ==&#62; #(a b c)
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>vector-length</B> <I><VAR>vector</VAR></I>
+<DD><A NAME="IDX176"></A>
+Returns the number of elements in <VAR>vector</VAR> as an exact integer.
+
+
+
+<PRE>
+(vector-length '#(a b c))   ==&#62; 3
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>vector-ref</B> <I><VAR>vector</VAR> <VAR>k</VAR></I>
+<DD><A NAME="IDX177"></A>
+<VAR>k</VAR> must be a valid index (zero-origin indexing) of
+<VAR>vector</VAR>. <CODE>vector-ref</CODE> returns the contents of element <VAR>k</VAR>
+of <VAR>vector</VAR>.
+
+
+
+<PRE>
+(vector-ref '#(1 1 2 3 5 8 13 21) 5)
+               ==&#62; 8
+(vector-ref '#(1 1 2 3 5 8 13 21) 0)
+               ==&#62; 1
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>vector-set!</B> <I><VAR>vector</VAR> <VAR>k</VAR> <VAR>obj</VAR></I>
+<DD><A NAME="IDX178"></A>
+<VAR>k</VAR> must be a valid index (zero-origin indexing) of
+<VAR>vector</VAR>. <CODE>vector-set!</CODE> stores <VAR>obj</VAR> in element <VAR>k</VAR> of
+<VAR>vector</VAR>. The value returned by <CODE>vector-set!</CODE> is unspecified.
+
+
+
+<PRE>
+(define vec (vector 0 '(2 2 2 2) "Anna"))
+(vector-set! vec 1 '("Sue" "Sue"))
+vec                  ==&#62; #(0 ("Sue" "Sue") "Anna")
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>vector-&#62;list</B> <I><VAR>vector</VAR></I>
+<DD><A NAME="IDX179"></A>
+<DT><U>Function:</U> <B>list-&#62;vector</B> <I><VAR>list</VAR></I>
+<DD><A NAME="IDX180"></A>
+<CODE>vector-&#62;list</CODE> returns a newly allocated list of the objects
+contained in the elements of <VAR>vector</VAR>. <CODE>list-&#62;vector</CODE> returns a
+newly created vector initialized to the elements of the <VAR>list</VAR>.
+
+
+
+<PRE>
+(vector-&#62;list '#(dah dah didah))
+               ==&#62; (dah dah didah)
+(list-&#62;vector '(dididit dah))
+               ==&#62; #(dididit dah)
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>vector-fill!</B> <I><VAR>vector</VAR> <VAR>fill</VAR></I>
+<DD><A NAME="IDX181"></A>
+Stores <VAR>fill</VAR> in every element of <VAR>vector</VAR>. The value returned
+by <CODE>vector-fill!</CODE> is unspecified.
+
+
+
+<PRE>
+(define vec (vector 1 2 3))
+(vector-fill! vec #\A)
+vec            ==&#62; #(A A A)
+</PRE>
+
+</DL>
+
+
+
+<H2><A NAME="SEC25" HREF="ksm_toc.html#TOC25">Control Features</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>procedure?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX182"></A>
+Returns <CODE>#t</CODE> if <VAR>obj</VAR> is a procedure, otherwise returns
+<CODE>#f</CODE>.
+
+
+
+<PRE>
+(procedure? car)         ==&#62; #t
+(procedure? 'car)        ==&#62; #f
+(procedure? (lambda (x) (* x x)))
+                         ==&#62; #t
+(procedure? '(lambda (x) (* x x)))
+                         ==&#62; #f
+(call-with-current-continuation procedure?)
+                         ==&#62; #t
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>apply</B> <I><VAR>proc</VAR> <VAR>arg1</VAR> ... <VAR>args</VAR></I>
+<DD><A NAME="IDX183"></A>
+<VAR>proc</VAR> must be a procedure and <VAR>args</VAR> must be a list. Calls
+<VAR>proc</VAR> with the elements of the list (append (list <VAR>arg1</VAR> ...)
+<VAR>args</VAR>) as the actual arguments.
+
+
+
+<PRE>
+(apply + '(3 4))         ==&#62; 7
+(apply + 1 2 '(3 4))     ==&#62; 10
+(define compose
+  (lambda (f g)
+    (lambda args
+      (f (apply g args)))))
+
+((compose sqrt *) 12 75) ==&#62; 30 ; (sqrt (* 12 75))
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>map</B> <I><VAR>proc</VAR> <VAR>list1</VAR> <VAR>list2</VAR> ...</I>
+<DD><A NAME="IDX184"></A>
+The <VAR>list</VAR>'s must be lists, and <VAR>proc</VAR> must be a procedure
+taking as many arguments as there are <VAR>list</VAR>'s and returning a
+single value. If more than one <VAR>list</VAR> is given, then they must all
+be the same length. <CODE>map</CODE> applies <VAR>proc</VAR> element-wise to the
+elements of the <VAR>list</VAR>'s and returns a list of the results, in
+order. The order in which <VAR>proc</VAR> is applied to the elements of the
+<VAR>list</VAR>'s is unspecified.
+
+
+
+<PRE>
+(map cadr '((a b) (d e) (g h)))
+            ==&#62; (b e h)
+(map (lambda (n) (expt n n))
+     '(1 2 3 4 5))
+           ==&#62; (1 3 27 256 3125)
+(map + '(1 2 3) '(4 5 6))  ==&#62; (5 7 9)
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>for-each</B> <I><VAR>proc</VAR> <VAR>list1</VAR> <VAR>list2</VAR> ...</I>
+<DD><A NAME="IDX185"></A>
+The arguments to <CODE>for-each</CODE> are like the arguments to <CODE>map</CODE>,
+but <CODE>for-each</CODE> calls <VAR>proc</VAR> for its side effects rather than
+for its values. Unlike <CODE>map</CODE>, <CODE>for-each</CODE> is guaranteed to call
+<VAR>proc</VAR> on the elements of the <VAR>list</VAR>'s in order from the first
+element to the last, and the value returned by <CODE>for-each</CODE> is
+unspecified. 
+
+
+
+<PRE>
+(let ((v (make-vector 5)))
+  (for-each (lambda (i)
+              (vector-set! v i (* i i)))
+            '(0 1 2 3 4))
+  v)                   ==&#62; #(0 1 4 9 16)
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>call-with-current-continuation</B> <I><VAR>proc</VAR></I>
+<DD><A NAME="IDX186"></A>
+<DT><U>Function:</U> <B>call/cc</B> <I><VAR>proc</VAR></I>
+<DD><A NAME="IDX187"></A>
+<VAR>proc</VAR> must be a procedure of one argument. The procedure
+<CODE>call-with-current-continuation</CODE> packages up the current
+continuation as an "escape procedure" and passes it as an argument to
+<VAR>proc</VAR>. The escape procedure is a Scheme procedure that, if it is
+later called, will abandon whatever continuation is in effect at that
+later time and will instead use the continuation that was in effect when
+the escape procedure was created. Calling the escape procedure may cause
+the invocation of <EM>before</EM> and <EM>after</EM> thunks installed using
+<CODE>dynamic-wind</CODE>.
+
+
+<P>
+The escape procedure accepts the same number of arguments as the
+continuation to the original call to
+<CODE>call-with-current-continuation</CODE>. Except for continuations created
+by the <CODE>call-with-values</CODE> procedure, all continuations take exactly
+one value. The effect of passing no value or more than one value to
+continuations that were not created by <CODE>call-with-values</CODE> is
+unspecified.
+
+
+<P>
+The escape procedure that is passed to <VAR>proc</VAR> has unlimited extent
+just like any other procedure in Scheme. It may be stored in variables
+or data structures and may be called as many times as desired.
+
+
+<P>
+The following examples show only the most common ways in which
+<CODE>call-with-current-continuation</CODE> is used. If all real uses were as
+simple as these examples, there would be no need for a procedure with
+the power of <CODE>call-with-current-continuation</CODE>.
+
+
+
+<PRE>
+(call-with-current-continuation
+  (lambda (exit)
+    (for-each (lambda (x)
+                (if (negative? x)
+                    (exit x)))
+              '(54 0 37 -3 245 19))
+    #t))          ==&#62; -3
+
+(define list-length
+  (lambda (obj)
+    (call-with-current-continuation
+      (lambda (return)
+        (letrec ((r
+                  (lambda (obj)
+                    (cond ((null? obj) 0)
+                          ((pair? obj)
+                           (+ (r (cdr obj)) 1))
+                          (else (return #f))))))
+         (r obj))))))
+
+(list-length '(1 2 3 4))  =&#62; 4
+
+(list-length '(a b . c))  =&#62; #f
+</PRE>
+
+<P>
+When feature of multithread programming is utilized See section <A HREF="ksm_12.html#SEC53">Thread</A>, there is a restriction in the usage of continuation: A
+continuation (or escape procedure) can be invoked only from the thread
+that packaged the continuation.
+
+
+
+<PRE>
+(call/cc (lambda (cc) (cc 'ok))) ==&#62; ok
+(call/cc (lambda (cc) 
+           (thread:create (lambda () (cc 'no)))))
+                                 ==&#62; #&#60;error&#62;
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>values</B> <I><VAR>obj</VAR> ...</I>
+<DD><A NAME="IDX188"></A>
+Delivers all of its arguments to its continuation. Except for
+continuations created by the <CODE>call-with-values</CODE> procedure, all
+continuations take exactly one value. 
+
+
+
+<PRE>
+(values 1)      ==&#62; 1
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>call-with-values</B> <I><VAR>producer</VAR> <VAR>consumer</VAR></I>
+<DD><A NAME="IDX189"></A>
+Calls its <VAR>producer</VAR> argument with no values and a continuation
+that, when passed some values, calls the <VAR>consumer</VAR> procedure with
+those values as arguments. The continuation for the call to
+<VAR>consumer</VAR> is the continuation of the call to
+<CODE>call-with-values</CODE>.
+
+
+
+<PRE>
+(call-with-values (lambda () (values 4 5))
+                  (lambda (a b) b))
+                            ==&#62; 5
+
+(call-with-values * -)      ==&#62; -1
+</PRE>
+
+<P>
+When the feature of multithread programming is utilized See section <A HREF="ksm_12.html#SEC53">Thread</A>, <CODE>values</CODE> should be called within the same thread that
+created the continuation by <CODE>call-with-values</CODE>.
+
+
+
+<PRE>
+(call/wv (lambda () (values 'ok))
+         (lambda (a) a))   ==&#62; ok
+(call/wv (lambda () 
+           (thread:create (lambda () (values 'no))))
+         (lambda (a) a))   ==&#62; #&#60;error&#62;
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>dynamic-wind</B> <I><VAR>before</VAR> <VAR>thunk</VAR> <VAR>after</VAR></I>
+<DD><A NAME="IDX190"></A>
+Calls <VAR>thunk</VAR> without arguments, returning the result of this
+call. <VAR>before</VAR> and <VAR>after</VAR> are called, also without arguments,
+as required by the following rules (note that in the absence of calls to
+continuations captured using <CODE>call-with-current-continuation</CODE> the
+three arguments are called once each, in order). <VAR>before</VAR> is called
+whenever execution enters the dynamic extent of the call to <VAR>thunk</VAR>
+and <VAR>after</VAR> is called whenever it exits that dynamic extent. The
+dynamic extent of a procedure call is the period between when the call
+is initiated and when it returns. In Scheme, because of
+<CODE>call-with-current-continuation</CODE>, the dynamic extent of a call may
+not be a single, connected time period. It is defined as follows:
+
+
+
+<UL>
+<LI>
+
+The dynamic extent is entered when execution of the body of the called
+procedure begins.
+
+<LI>
+
+The dynamic extent is also entered when execution is not within the
+dynamic extent and a continuation is invoked that was captured (using
+<CODE>call-with-current-continuation</CODE> during the dynamic extent.
+
+<LI>
+
+It is exited when the called procedure returns.
+
+<LI>
+
+It is also exited when execution is within the dynamic extent and a
+continuation is invoked that was captured while not within the dynamic
+extent.
+
+</UL>
+
+<P>
+If a second call to <CODE>dynamic-wind</CODE> occurs within the dynamic extent
+of the call to <VAR>thunk</VAR> and then a continuation is invoked in such a
+way that the <VAR>after</VAR>'s from these two invocations of
+<CODE>dynamic-wind</CODE> are both to be called, then the <VAR>after</VAR>
+associated with the second (inner) call to <CODE>dynamic-wind</CODE> is called
+first.
+
+
+<P>
+If a second call to <CODE>dynamic-wind</CODE> occurs within the dynamic extent
+of the call to <VAR>thunk</VAR> and then a continuation is invoked in such a
+way that the <VAR>before</VAR>'s from these two invocations of
+<CODE>dynamic-wind</CODE> are both to be called, then the <VAR>before</VAR>
+associated with the first (outer) call to <CODE>dynamic-wind</CODE> is called
+first.
+
+
+<P>
+If invoking a continuation requires calling the <VAR>before</VAR> from one
+call to <CODE>dynamic-wind</CODE> and the <VAR>after</VAR> from another, then the
+<VAR>after</VAR> is called first.
+
+
+<P>
+The effect of using a captured continuation to enter or exit the dynamic
+extent of a call to <VAR>before</VAR> or <VAR>after</VAR> is undefined.
+
+
+
+<PRE>
+(let ((path '())
+      (c #f))
+  (let ((add (lambda (s)
+        (set! path (cons s path)))))
+    (dynamic-wind
+     (lambda () (add 'connect))
+     (lambda ()
+       (add (call-with-current-continuation
+              (lambda (c0)
+                (set! c c0)
+                'talk1))))
+     (lambda () (add 'disconnect)))
+    (if (&#60; (length path) 4)
+        (c 'talk2)
+        (reverse path))))
+  ==&#62; (connect talk1 disconnect connect talk2 disconnect)
+</PRE>
+
+</DL>
+
+
+
+<H2><A NAME="SEC26" HREF="ksm_toc.html#TOC26">Eval</A></H2>
+<P>
+<DL>
+<DT><U>Function:</U> <B>eval</B> <I><VAR>expression</VAR> [<VAR>environ</VAR>]</I>
+<DD><A NAME="IDX191"></A>
+Evaluates <VAR>expression</VAR> in the specified environment and returns its
+value. <VAR>expression</VAR> must be a valid Scheme expression represented as
+data, and <VAR>environ</VAR> (if supplied) must be a value returned by one of
+the three procedures described below. If <VAR>environ</VAR> is not supplied,
+the <VAR>expression</VAR> is evaluated with the current top-level
+environment, which is equivalent to the value returned by
+<CODE>(interaction-environment)</CODE>.
+
+
+
+<PRE>
+(eval '(* 7 3))                 ==&#62; 21
+(eval '(* 7 3) (scheme-report-environment 5))
+                                ==&#62; 21
+(let ((f (eval '(lambda (f x) (f x x))
+               (null-environment 5))))
+  (f + 10))
+                                ==&#62; 
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>scheme-report-environment</B> <I><VAR>version</VAR></I>
+<DD><A NAME="IDX192"></A>
+<DT><U>Function:</U> <B>null-environment</B> <I><VAR>version</VAR></I>
+<DD><A NAME="IDX193"></A>
+<VAR>version</VAR> must be the integer
+<CODE>5</CODE>. <CODE>scheme-report-environment</CODE> returns an environment that
+is empty except for all bindings defined in the Revised^5 Report on
+Scheme. <CODE>null-environment</CODE> returns an environment that is empty
+except for the bindings for all syntactic keywords defined in the
+Revised^5 Report on Scheme. 
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>interaction-environment</B>
+<DD><A NAME="IDX194"></A>
+This function returns the current top-level environment.
+</DL>
+
+
+
+
+<H2><A NAME="SEC27" HREF="ksm_toc.html#TOC27">Port</A></H2>
+
+<P>
+Ports represent input and output devices. To Scheme, an input port is a
+Scheme object that can deliver characters upon command, while an output
+port is a Scheme object that can accept characters.
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>call-with-input-file</B> <I><VAR>string</VAR> [<VAR>encoding</VAR>] <VAR>proc</VAR></I>
+<DD><A NAME="IDX195"></A>
+<DT><U>Function:</U> <B>call-with-output-file</B> <I><VAR>string</VAR> [<VAR>encoding</VAR>] <VAR>proc</VAR></I>
+<DD><A NAME="IDX196"></A>
+<VAR>string</VAR> should be a string naming a file, and <VAR>proc</VAR> should be
+a procedure that accepts one argument. For <CODE>call-with-input-file</CODE>,
+the file should already exist; for <CODE>call-with-output-file</CODE> the file
+is truncated if the file already exists. These procedures cal <VAR>proc</VAR>
+with one argument: the port obtained by opening the named file for input
+or output. If the file cannot be opened, an error is signalled. If
+<VAR>proc</VAR> returns, then the port is closed automatically and the value
+yielded by the <VAR>proc</VAR> is returned. If <VAR>proc</VAR> does not return,
+then the port will not be closed automatically unless it is possible to
+prove that the port will never again be used.
+
+
+<P>
+Because Scheme's escape procedures have unlimited extent, it is possible
+to escape from the current continuation but later to escape back in. If
+implementations were permitted to close the port on any escape from the
+current continuation, then it would be impossible to write portable code
+using both <CODE>call-with-current-continuation</CODE> and
+<CODE>call-with-input-file</CODE> or <CODE>call-with-output-file</CODE>.
+
+
+<P>
+If <VAR>encoding</VAR> is supplied, it should be a string that specifies the
+character-set encoding of the input or output file. If it is omitted, it
+defaults to "UTF-8", which is the internal encoding in KSM-Scheme.
+Acceptable encoding methods are available from <CODE>iconv --list</CODE>.
+
+
+<P>
+Following expression converts a file encoded in SHIFT-JIS to a new file
+encoded in EUC-JP.
+
+<PRE>
+(call-with-output-file "dst.euc" "EUC-JP"
+  (lambda (out)
+    (call-with-input-file "src.sjis" "SHIFT-JIS"
+      (lambda (in)
+        (let loop ((ch (read-char in)))
+             (if (not (eof-object? ch))
+                 (begin
+                   (write-char ch out)
+                   (loop (read-char in)))))))))
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>input-port?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX197"></A>
+<DT><U>Function:</U> <B>output-port?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX198"></A>
+Returns <CODE>#t</CODE> if <VAR>obj</VAR> is an input port or output port,
+respectively; otherwise returns <CODE>#f</CODE>.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>current-input-port</B>
+<DD><A NAME="IDX199"></A>
+<DT><U>Function:</U> <B>current-output-port</B>
+<DD><A NAME="IDX200"></A>
+Returns the current default input or output port.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>current-error-port</B>
+<DD><A NAME="IDX201"></A>
+Returns a port which outputs accepted characters to the error stream
+("standard error").
+
+
+<P>
+@source{base/base.c}
+@use{none}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>with-input-from-file</B> <I><VAR>string</VAR> [<VAR>encoding</VAR>] <VAR>thunk</VAR></I>
+<DD><A NAME="IDX202"></A>
+<DT><U>Function:</U> <B>with-output-to-file</B> <I><VAR>string</VAR> [<VAR>encoding</VAR>] <VAR>thunk</VAR></I>
+<DD><A NAME="IDX203"></A>
+<VAR>string</VAR> should be a string naming a file, and <VAR>proc</VAR> should be
+a procedure that accepts one argument. For <CODE>call-with-input-file</CODE>,
+the file should already exist; for <CODE>call-with-output-file</CODE> the file
+is truncated if the file already exists. The file is opened for input or
+output, an input or output port connected to it is made the default
+value returned by <CODE>current-input-port</CODE> or
+<CODE>current-output-port</CODE> (and is used by <CODE>(read)</CODE>, <CODE>(write
+<VAR>obj</VAR>)</CODE>, and so forth), and the <VAR>thunk</VAR> is called with no
+arguments. When the <VAR>thunk</VAR> returns, the port is automatically
+closed and the previous default is restored. <CODE>with-input-from-file</CODE>
+and <CODE>with-output-to-file</CODE> return the value yielded by
+<VAR>thunk</VAR>. If an escape procedure is used to escape from the
+continuation of these procedures, the previous default is not restored.
+
+
+<P>
+If <VAR>encoding</VAR> is supplied, it should be a string that specifies the
+encoding of the input or output file. If it is omitted, it defaults to
+"UTF-8".
+
+
+
+<PRE>
+(with-input-from-file "src.euc" "EUC-JP"
+  (lambda () ...))
+
+(with-output-to-file "dst.sjis" "SHIFT-JIS"
+  (lambda () ...))
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>open-input-file</B> <I><VAR>filename</VAR> [<VAR>encoding</VAR>]</I>
+<DD><A NAME="IDX204"></A>
+<VAR>filename</VAR> should the name of an existing file. This function
+returns an input port capable of delivering characters from the file. If
+the file cannot be opened, an error is signalled.
+
+
+<P>
+If <VAR>encoding</VAR> is supplied, it should be a string that specifies the
+character-set encoding of the input file. If it is omitted, it defaults
+to "UTF-8".
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>open-output-file</B> <I><VAR>filename</VAR> [<VAR>encoding</VAR>]</I>
+<DD><A NAME="IDX205"></A>
+<VAR>filename</VAR> specifies the name of an output file. If a file with the
+same name already exists, the file is truncated before opening. This
+function returns an output port capable of writing characters to a new
+file by that name. If the file cannot be opened or created, an error is
+signalled. 
+
+
+<P>
+If <VAR>encoding</VAR> is supplied, it should be a string that specifies the
+character-set encoding of the output file. If it is omitted, it defaults
+to "UTF-8".
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>close-input-port</B> <I><VAR>port</VAR></I>
+<DD><A NAME="IDX206"></A>
+<DT><U>Function:</U> <B>close-output-port</B> <I><VAR>port</VAR></I>
+<DD><A NAME="IDX207"></A>
+Closes the file associated with <VAR>port</VAR>, rendering the <VAR>port</VAR>
+incapable of delivering or accepting characters. These routines have no
+effect if the file has already been closed. The value returned is
+unspecified. 
+</DL>
+
+
+
+
+<H2><A NAME="SEC28" HREF="ksm_toc.html#TOC28">Input</A></H2>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>read</B>
+<DD><A NAME="IDX208"></A>
+<DT><U>Function:</U> <B>read</B> <I><VAR>port</VAR></I>
+<DD><A NAME="IDX209"></A>
+<CODE>read</CODE> converts external representations of Scheme objects into the
+objects themselves. Therefore, it is a Scheme parser. <CODE>read</CODE>
+returns the next object parsable from the given input <VAR>port</VAR>,
+updating <VAR>port</VAR> to point to the first character past the end of the
+external representation of the object.
+
+
+<P>
+If an end of file is encountered in the input before any characters are
+found that can begin an object, then an end of file object is
+returned. The port remains open, and further attempts to read will also
+return an end of file object. If an end of file is encountered after a
+beginning of an object's external representation and the characters up
+to the point consistute a complete representation, <CODE>read</CODE> returns
+the corresponding object. Next time <CODE>read</CODE> is called, it returns an
+end of file object. If an end of file is encountered after the beginning
+of an object's external representation, but the external representation
+is incomplete and therefore not parsable, an error is signalled. 
+
+
+<P>
+The <VAR>port</VAR> argument may be omitted, in which case it defaults to the
+value returned by <CODE>current-input-port</CODE>. It is an error to read from
+a closed port.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>read-char</B>
+<DD><A NAME="IDX210"></A>
+<DT><U>Function:</U> <B>read-char</B> <I><VAR>port</VAR></I>
+<DD><A NAME="IDX211"></A>
+Returns the next character available from the input <VAR>port</VAR>, updating
+the <VAR>port</VAR> to point to the following character. If no more
+characters are available, an end of file object is returned. <VAR>port</VAR>
+may be omitted, in which case it defaults to the value returned by
+<CODE>current-input-port</CODE>. 
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>peek-char</B>
+<DD><A NAME="IDX212"></A>
+<DT><U>Function:</U> <B>peek-char</B> <I><VAR>port</VAR></I>
+<DD><A NAME="IDX213"></A>
+Returns the next character available from the input <VAR>port</VAR>,
+<EM>without</EM> updating the <VAR>port</VAR> to point to the following
+character. If no more characters are available, an end of file object is
+returned. <VAR>port</VAR> may be omitted, in which case it defaults to the
+value returned by <CODE>current-input-port</CODE>.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>eof-object?</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX214"></A>
+Returns <CODE>#t</CODE> if <VAR>obj</VAR> is an end of file object, otherwise
+returns <CODE>#f</CODE>.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>char-ready?</B>
+<DD><A NAME="IDX215"></A>
+<DT><U>Function:</U> <B>char-ready?</B> <I><VAR>port</VAR></I>
+<DD><A NAME="IDX216"></A>
+Returns <CODE>#t</CODE> if a character is ready on the input <VAR>port</VAR> and
+returns <CODE>#f</CODE> otherwise. If <CODE>char-ready?</CODE> returns <CODE>#t</CODE>
+then the next <CODE>read-char</CODE> operation on the given <VAR>port</VAR> is
+guaranteed not to hang. If the <VAR>port</VAR> is at end of file then
+<CODE>char-ready?</CODE> returns <CODE>#t</CODE>. <VAR>port</VAR> may be omitted, in
+which case it defaults to the value returned by
+<CODE>current-input-port</CODE>.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>readline</B> <I>[<VAR>port</VAR>]</I>
+<DD><A NAME="IDX217"></A>
+Reads one line (terminated by '\n') from <VAR>port</VAR> and returns the line
+as a string.  The last character '\n' is removed from the string. If
+'\n' is immediately preceded by \, both \ and the '\n' is ignored.  If
+there is no more line to be read, end of file object is returned.
+If <VAR>port</VAR> is omitted, it defaults to the current input port.
+
+
+
+<PRE>
+$ cat text
+Hello, world!
+Hello, another world!
+$ ksm
+&#62; (define in (open-input-file "text"))
+&#62; (readline in)
+        =&#62; "Hello, world!"
+&#62; (readline in)
+        =&#62; "Hello, another world!"
+&#62; (close-input-port in)
+</PRE>
+
+<P>
+@source{base/readline.c}
+@use{none}
+</DL>
+
+
+
+
+<H2><A NAME="SEC29" HREF="ksm_toc.html#TOC29">Output</A></H2>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>write</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX218"></A>
+<DT><U>Function:</U> <B>write</B> <I><VAR>obj</VAR> <VAR>port</VAR></I>
+<DD><A NAME="IDX219"></A>
+Writes a written representation of <VAR>obj</VAR> to the given
+<VAR>port</VAR>. Strings that appear in the written representation are
+enclosed in doublequotes, and within those strings backslash and
+doublequote characters are escaped by backslashes. Character objects are
+written using the <CODE>#\</CODE> notation. <CODE>write</CODE> returns an
+unspecified value. The <VAR>port</VAR> argument may be omitted, in which case
+it defaults to the value returned by <CODE>current-input-port</CODE>.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>display</B> <I><VAR>obj</VAR></I>
+<DD><A NAME="IDX220"></A>
+<DT><U>Function:</U> <B>display</B> <I><VAR>obj</VAR> <VAR>port</VAR></I>
+<DD><A NAME="IDX221"></A>
+Writes a representation of <VAR>obj</VAR> to the given <VAR>port</VAR>. Strings
+that appear in the written representation are not enclosed in
+doublequotes, and no characters are escaped within those
+strings. Character objects appear in the representation as if written by
+<CODE>write-char</CODE> instead of <CODE>write</CODE>. <CODE>display</CODE> returns an
+unsepcified value. The <VAR>port</VAR> argument may be omitted, in which case
+it defaults to the value returned by <CODE>current-output-port</CODE>.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>newline</B>
+<DD><A NAME="IDX222"></A>
+<DT><U>Function:</U> <B>newline</B> <I><VAR>port</VAR></I>
+<DD><A NAME="IDX223"></A>
+Writes an end of line to <VAR>port</VAR>.  Returns an unspecified
+value. The <VAR>port</VAR> argument may be omitted, in which case it defaults
+to the value returned by <CODE>current-input-port</CODE>.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>write-char</B> <I><VAR>char</VAR></I>
+<DD><A NAME="IDX224"></A>
+<DT><U>Function:</U> <B>write-char</B> <I><VAR>char</VAR> <VAR>port</VAR></I>
+<DD><A NAME="IDX225"></A>
+Writes the character <VAR>char</VAR> to the given <VAR>port</VAR> and returns an
+unspecified value. The <VAR>port</VAR> argument may be omitted, in which case
+it defaults to the value returned by <CODE>current-output-port</CODE>.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>flush-output-port</B> <I>[<VAR>port</VAR>]</I>
+<DD><A NAME="IDX226"></A>
+Flushes <VAR>port</VAR>. If <VAR>port</VAR> is omitted, it defaults to the current
+output port.
+</DL>
+
+
+
+
+<H2><A NAME="SEC30" HREF="ksm_toc.html#TOC30">System Interface</A></H2>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>load</B> <I><VAR>filename</VAR> [<VAR>encoding</VAR>]</I>
+<DD><A NAME="IDX227"></A>
+<VAR>filename</VAR> should be a string naming an existing file containing
+Scheme source code. The <CODE>load</CODE> procedure reads expressions from the 
+file and evalutes them sequentially. The results of the expressions are
+not automatically printed, in contrast to an interactive
+session. <CODE>load</CODE> procedure does not affect the value returned by
+<CODE>current-input-port</CODE> and <CODE>current-output-port</CODE>. <CODE>load</CODE>
+returns an unspecified value. 
+
+
+<P>
+If <VAR>encoding</VAR> is supplied, it must be a string representing the
+character-set encoding of the source file. If it is omitted, it defaults
+to "UTF-8". While reading the source file, the encoding is automatically
+converted to "UTF-8", which is the internal encoding in
+KSM-Scheme. Acceptable encoding is available from <CODE>iconv --list</CODE>.
+
+
+
+<PRE>
+(load "example.scm" "EUC-JP") ;; loads source file "example.scm"
+                              ;; that is encoded in EUC-JP
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>load-file-name</B>
+<DD><A NAME="IDX228"></A>
+Returns a string that represents the file name nder which current Scheme
+source file is loaded.
+
+
+
+<PRE>
+$ cat src.scm
+(write (load-file-name))
+(newline)
+$ ksm
+&#62; (load "src.scm")
+"src.scm"
+</PRE>
+
+<P>
+@source{nterp/ext.c}
+@use{none}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>transcript-on</B> <I><VAR>filename</VAR></I>
+<DD><A NAME="IDX229"></A>
+<DT><U>Function:</U> <B>transcript-off</B>
+<DD><A NAME="IDX230"></A>
+
+
+<P>
+These functions are not supported in KSM-Scheme. If called they do
+nothing and return an unspecified value.
+
+
+<P>
+In Revised^5 Report of Scheme, these functions are described as below.
+
+
+<P>
+<VAR>filename</VAR> must be a string naming an output file to be created. The
+effect of <CODE>transcript-on</CODE> is to open the named file for output, and
+to cause a transcript of subsequent interaction between the user and the
+Scheme system to be written to the file. The transcript is ended by a
+call to <CODE>transcript-off</CODE>, which closes the transcript file. Only
+one transcript may be in progress at any time, though some
+implementations may relax this restriction. The values returned by
+these procedures are unspecified.
+</DL>
+
+
+<P><HR><P>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_7.html">previous</A>, <A HREF="ksm_9.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+</BODY>
+</HTML>

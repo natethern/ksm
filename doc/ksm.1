@@ -1,0 +1,39 @@
+.TH KSM 1 "KSM-Scheme"
+.SH NAME
+ksm \- a Scheme Interpreter
+.SH SYNOPSIS
+.B ksm
+[\-xl file] [\-xc encoding] [\-xh] [file arg...]
+.SH DESCRIPTION
+.B ksm
+is a Scheme interpreter that integrates easily with functions and
+variables defined in C language. When file is specified, it
+interpretes its content as a Scheme program with the following command
+line args passed to the program. If file is not specified, it enters
+an interactive mode and accepts Scheme expressions from standard
+input.
+.SH OPTIONS
+.IP "-xl file"
+Preload the file before interpreting the source file. The file is
+loaded after initialization has been done by loading "init.scm" in KSM
+home directory. 
+.IP "-xc encoding"
+Specifies the default encoding. Input files (including standard input)
+are regarded to be encoded by the specified encoding and are
+automatically converted to UTF-8 encoding while being read. Output
+files (including standard output and standard error) are encoded by
+the specified encoding.
+
+This option is useful, for example, when kterm with default EUC-JP
+encoding is used as the terminal. Invoking ksm as "ksm -xc EUC-JP",
+EUC-JP encoded input is automatically converted to UTF-8 encoding and
+output is automatically encoded by EUC-JP.
+
+.IP "-xh"
+Outputs help information.
+.SH AUTHOR
+Hangil Chang <hchang-tky@umin.ac.jp>
+
+
+
+

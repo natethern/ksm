@@ -1,0 +1,56 @@
+Installation
+============
+
+Please refer to the file "INSTALL".
+
+Invoking KSM-Scheme
+===================
+
+KSM-Scheme is invoked from the command line as
+
+ksm [options] [FILE ARG ...]
+
+Acceptable options are
+
+-xl FILE        load FILE before starting the interpreter
+-xc ENCODING    set the default encoding to ENCODING
+-xh             display the help information
+
+If ENCODING is specified, input files (including standard input)
+are assumed to be encoding by @var{encoding} and they are automatically
+converted to UTF-8 encoding while reading the file. Output files
+(including standard output and standard error) are automatically
+converted to @var{encoding} from UTF-8 that is the internal encoding in
+KSM-Scheme.
+
+For example, to use KSM-Scheme under the circumstances in which
+`kterm' with default encoding of EUC-JP is used, following
+invocation will provide the desirable interaction.
+
+ksm -xc EUC-JP
+
+If FILE is specified, it should be the name of a Scheme source
+file. The KSM-Scheme interpreter loads the file and then
+terminates. If FILEfile is omitted, KSM-Scheme enters an interactive
+mode and accepts Scheme source from standard input.
+
+If ARGS are specified, it is passed the FILE program as command line
+arguments. They can be accessed by `cmdline-args' from the
+program.
+
+$ cat src.scm
+(display (cmdline-args))
+(newline)
+$ ksm src.scm a b c
+(src.scm a b c)
+
+Documentation
+============
+
+  Reference manual is installed as a `info' file. Please refer it
+  by 
+
+  $ info ksm
+
+  Reference manual in HTML format is stored under the directory
+  $(prefix)/ksm/ksm-0.3.1/doc

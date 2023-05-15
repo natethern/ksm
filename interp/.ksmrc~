@@ -1,0 +1,2 @@
+(display "Welcome to KSM-Scheme!")
+(newline)

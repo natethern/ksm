@@ -1,0 +1,73 @@
+<HTML>
+<HEAD>
+<!-- Created by texi2html 1.56k from ksm.texi on 12 May 2001 -->
+
+<TITLE>KSM-Scheme Reference Manual - Identifiers</TITLE>
+</HEAD>
+<BODY>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_2.html">previous</A>, <A HREF="ksm_4.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+<P><HR><P>
+
+
+<H1><A NAME="SEC3" HREF="ksm_toc.html#TOC3">Identifiers</A></H1>
+
+<P>
+An identifier is a sequence of characters such as <CODE>value</CODE> and
+<CODE>sum</CODE>. In KSM-Scheme, a character represents a Unicode code and an
+identifier can be any combination of Unicode characters if following
+conditions are satisfied. 1) It does not begin with <CODE>(</CODE>, <CODE>)</CODE>,
+<CODE>'</CODE>, <CODE>`</CODE>, <CODE>,</CODE>, <CODE>"</CODE>, <CODE>[</CODE>, <CODE>]</CODE>, <CODE>|</CODE>,
+<CODE>#</CODE>, <CODE>;</CODE>, or <CODE>:</CODE>. 2) It does not include whitespaces,
+<CODE>(</CODE>, <CODE>)</CODE>, and <CODE>;</CODE>. Finally, 3) it cannot be interpreted
+as a number.
+
+
+<P>
+Here are some examples of identifiers:
+
+
+
+<PRE>
+lambda
+list-&#62;vector 
++
+&#60;=?
+the-word-recusrion-has-many-meanings
+q
+soup
+V17a
+a34kTMNs
+</PRE>
+
+<P>
+And these are not identifiers:
+
+<PRE>
+(123)    ;; starting with `('
+"abc"    ;; starting with `"'
+123      ;; it's a number
++3.21    ;; it's a number
+-.123    ;; it's a number
+</PRE>
+
+<P>
+KSM-Scheme is case-sensitive in contrast to the Scheme
+Standard. Therefore, following identifiers represent distinct objects.
+
+
+
+<PRE>
+Identifier
+identifier
+IDENTIFIER
+</PRE>
+
+<P>
+This decision was made to make KSM-Scheme easily interface with C
+functions.
+
+
+<P><HR><P>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_2.html">previous</A>, <A HREF="ksm_4.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+</BODY>
+</HTML>

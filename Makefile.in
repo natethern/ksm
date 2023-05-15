@@ -1,0 +1,58 @@
+DEFS = @DEFS@
+LIBS = @LIBS@
+export DEFS
+export LIBS
+
+all:
+	cd interp; $(MAKE)
+	cd base; $(MAKE)
+	cd clang; $(MAKE)
+	cd regex; $(MAKE)
+	cd thread; $(MAKE)
+	cd clike; $(MAKE)
+	cd doc; $(MAKE)
+
+clean:
+	cd interp; make clean
+	cd base; make clean
+	cd clang; make clean
+	cd regex; make clean
+	cd thread; make clean
+	cd clike; $(MAKE) clean
+	cd include; make clean
+	cd doc; make clean
+	rm -f *~ *.o core config.* Makefile
+
+ksm_ver = @ksm_ver@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+infodir = @infodir@
+mandir = @mandir@
+INSTALL_INFO = @INSTALL_INFO@
+
+export dst_base = $(prefix)/ksm/ksm-$(ksm_ver)
+export bindir
+export ksm_ver
+export infodir
+export mandir
+export INSTALL_INFO
+
+install:
+	install -D init.scm $(dst_base)/init.scm
+	cd interp; $(MAKE) install
+	cd base; $(MAKE) install
+	cd clang; $(MAKE) install
+	cd regex; $(MAKE) install
+	cd thread; $(MAKE) install
+	cd clike; $(MAKE) install
+	cd doc; $(MAKE) install
+
+uninstall:
+	rm -rf $(prefix)/ksm
+	rm -rf $(bindir)/ksm
+	cd doc; $(MAKE) uninstall
+
+arch:
+	$(MAKE) clean
+	cd ..; tar -czvf ksm-${ksm_ver}.tar.gz ksm-${ksm_ver}

@@ -1,0 +1,97 @@
+<HTML>
+<HEAD>
+<!-- Created by texi2html 1.56k from ksm.texi on 12 May 2001 -->
+
+<TITLE>KSM-Scheme Reference Manual - Other Notations</TITLE>
+</HEAD>
+<BODY>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_5.html">previous</A>, <A HREF="ksm_7.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+<P><HR><P>
+
+
+<H1><A NAME="SEC9" HREF="ksm_toc.html#TOC9">Other Notations</A></H1>
+<P>
+<A NAME="IDX1"></A>
+
+
+<TABLE BORDER>
+
+<TR><TD><CODE>'obj</CODE></TD>
+
+</TD><TD> equivalent to <CODE>(quote obj)</CODE>
+
+</TR>
+<TR><TD><CODE>`obj</CODE></TD>
+
+</TD><TD> equivalent to <CODE>(quasi-quote obj)</CODE>
+
+</TR>
+<TR><TD><CODE>,obj</CODE></TD>
+
+</TD><TD> equivalent to <CODE>(unquote obj)</CODE>
+
+</TR>
+<TR><TD><CODE>,@obj</CODE></TD>
+
+</TD><TD> equivalent to <CODE>(unquote-splicing obj)</CODE>
+
+</TR>
+<TR><TD><CODE>#t</CODE></TD>
+
+</TD><TD> represents <EM>true</EM> in Scheme
+
+</TR>
+<TR><TD><CODE>#f</CODE></TD>
+
+</TD><TD> represents <EM>false</EM> in Scheme
+
+</TR>
+<TR><TD><CODE>#(obj ...)</CODE></TD>
+
+</TD><TD> represents a vector whose elements are obj ...
+
+</TR>
+<TR><TD><CODE>[ ]</CODE></TD>
+
+</TD><TD> Left and right square brackets have no special meaning in
+KSM-Scheme. They can constitue identifiers as usual characters.
+
+</TR>
+<TR><TD><CODE>{ }</CODE></TD>
+
+</TD><TD> Left and right curly braces have no special meaning in
+KSM-Scheme. They can constitue identifiers as usual characters.
+
+</TR>
+<TR><TD><CODE>|</CODE></TD>
+
+</TD><TD> Vertical bar has no special meaning in
+KSM-Scheme. It can constitue identifiers as usual character.
+
+</TR>
+<TR><TD><CODE>#&#60;eof&#62;</CODE></TD>
+
+</TD><TD> Represents the end of file object.
+
+</TR>
+<TR><TD><CODE>#&#60;unspecified&#62;</CODE></TD>
+
+</TD><TD> Represents an unspecified value.
+
+</TR></TABLE>
+
+<P>
+The standard boolean objects for true and false are written as <CODE>#t</CODE>
+and <CODE>#f</CODE>. What really matters, though, are the objects that the
+Scheme conditional expressions (<CODE>if</CODE>, <CODE>cond</CODE>, <CODE>and</CODE>, ...)
+treat as true or false. The phrase "a true value" (or sometimes just
+"true") means any object other than the object represented by
+<CODE>#f</CODE>. The phrase "a false value" (or "false") means the object
+represented by <CODE>#f</CODE>. In this sense, the empty list and the symbol
+<CODE>nil</CODE> are "true values" in Scheme.
+
+
+<P><HR><P>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_5.html">previous</A>, <A HREF="ksm_7.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+</BODY>
+</HTML>

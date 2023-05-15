@@ -1,0 +1,810 @@
+<HTML>
+<HEAD>
+<!-- Created by texi2html 1.56k from ksm.texi on 12 May 2001 -->
+
+<TITLE>KSM-Scheme Reference Manual - Regular Expression Package</TITLE>
+</HEAD>
+<BODY>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_10.html">previous</A>, <A HREF="ksm_12.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+<P><HR><P>
+
+
+<H1><A NAME="SEC49" HREF="ksm_toc.html#TOC49">Regular Expression Package</A></H1>
+<P>
+Procedures that handle regular expression support Unicode in the sense
+that it handle characters as basic 16-bit logical units, and that it
+supports case-insensitive match for all Unicode characters including
+those beyong ASCII range.
+
+
+<P>
+Regular expression engine is based on the one developed by Henry
+Spencer. We have modified the original source to support Unicode
+characters.
+
+
+<P>
+Before using functions and variables in Regex Package, following
+function call should be made to dynamically load necessary library.
+
+
+
+<PRE>
+(use 'regex)
+</PRE>
+
+
+
+<H2><A NAME="SEC50" HREF="ksm_toc.html#TOC50">Regular Expression</A></H2>
+<P>
+Regular expressions, as defined in POSIX 1003.2, come in two forms:
+modern regular expressions and obsolete regular expressions. Obsolete
+regular expressions (roughly those of <CODE>ed</CODE>; 1003.2 <EM>basic</EM>
+regular expressions) mostly exist for backward compatibility in some old
+programs. KSM-Scheme uses modern regular expressions (roughly those of
+<CODE>egrep</CODE>; 1003.2 calls these <EM>extended</EM> regular expressions)
+with additional functionality of <EM>back references</EM>.
+
+
+<P>
+A regular expression is one or more non-empty <EM>branches</EM>, separated
+by <CODE>|</CODE>. It matches anything that matches one of the branches.
+
+
+
+<PRE>
+"one|two|three" ==&#62; matches "one", "two", or "three"
+</PRE>
+
+<P>
+A branch is one or more <EM>pieces</EM>, concatenated. It matches a match
+for the first, followed by a match for the second, etc.
+
+
+<P>
+A piece is an <EM>atom</EM> possibly followed by a single <CODE>*</CODE>,
+<CODE>+</CODE>, <CODE>?</CODE>, or <EM>bound</EM>. An atom followed by <CODE>*</CODE>
+matches a sequence of 0 or more matches of the atom. An atom followed by
+<CODE>+</CODE> matches a sequence of 1 or more matches of the atom. An atom
+followed by <CODE>?</CODE> matches a sequence of 0 or 1 matches of the atom.
+
+
+
+<PRE>
+"a*" ==&#62; matches "", "a", "aa", "aaa", ...
+"a+" ==&#62; matches "a", "aa", "aaa", ...
+"a?" ==&#62; matches "" or "a"
+</PRE>
+
+<P>
+A bound is <CODE>{</CODE> followed by a decimal integer, possibly followed by
+<CODE>,</CODE> possibly followed by another decimal integer, always followed
+by <CODE>}</CODE>. The integers must lie between 0 and 255 inclusive, and if
+there are two of them, the first may not exceed the second. An atom
+followed by a bound containing one integer <EM>i</EM> and no comma matches
+a sequence of exactly <EM>i</EM> matches of the atom. An atom followed by
+a bound containing one integer <EM>i</EM> and a comma matches a sequence
+of <EM>i</EM> or more matches of the atom. An atom followed by a bound
+containing two integers <EM>i</EM> and <EM>j</EM> matches a sequence of
+<EM>i</EM> through <EM>j</EM> (inclusive) matches of the atom.
+
+
+
+<PRE>
+"a{3}"   ==&#62; matches "aaa"
+"a{3,}"  ==&#62; matches "aaa", "aaaa", "aaaaa", ...
+"a{3,4}" ==&#62; matches "aaa" or "aaaa"
+</PRE>
+
+<P>
+An atom is a regular expression enclosed in <CODE>()</CODE> (matching a match
+for the regular expression), an empty set of <CODE>()</CODE> (matching the
+null string), a <EM>bracket expression</EM> (see below), <CODE>.</CODE>
+(matching any single character), <CODE>^</CODE> (matching the null string at
+the beginning of a line), <CODE>$</CODE> (matching the null string at the end
+of a line), a <EM>back reference</EM> (see below), a <CODE>\</CODE> followed by
+one of the characters <CODE>^.[$()|*+?{\</CODE> (matching that character
+taken as an ordinary character), a <CODE>\</CODE> followed by any other
+character (matching that character taken as an ordinary character, as if
+the <CODE>\</CODE> had not been present), or a single character with no other
+significance (matching that character). A <CODE>{</CODE> followed by a
+character other than a digit is an ordinary character, no the beginning
+of a bound. It is illegal to end a regular expression with <CODE>\</CODE>.
+
+
+<P>
+A bracket expression is a list of characters enclosed in <CODE>[]</CODE>. It
+normally matches any single character from the list (but see below). If
+the list begins with <CODE>^</CODE>, it matches any single character (but see
+below) <EM>not</EM> from the rest of the list. If two characters in the
+list are separated by <CODE>-</CODE>, this is shorthand for the full
+<EM>range</EM> of characters between those two (inclusive),
+e.g. <CODE>[0-9]</CODE> matches any decimal digit. It should be noted that
+ordering of characters is equivalent to that of Unicode code values. It
+is illegal for two ranges to share an endpoint, e.g. <CODE>a-c-e</CODE>.
+
+
+
+<PRE>
+"[a-z]"  ==&#62; matches small letter alphabets
+"[^0-9]" ==&#62; matches all characters except '0' through '9'
+</PRE>
+
+<P>
+To include a literal <CODE>]</CODE> in the list, make it the first character
+(following a possible <CODE>^</CODE>). To include a literal <CODE>-</CODE>, make it
+the first or last character, or the second endpoint of a range. To use a
+literal <CODE>-</CODE> as the first endpoint of a range, enclose it in
+<CODE>[.</CODE> and <CODE>.]</CODE> to make it a character-name element (see
+below). With the exception of these and some combinations using <CODE>[</CODE>
+(see next paragraphs), all other special characters, including <CODE>\</CODE>,
+lose their special sigfinicance within a bracket expression.
+
+
+
+<PRE>
+"[]]"       ==&#62; matches ']'
+"[^]]"      ==&#62; matches characters except ']'
+"[-]"       ==&#62; matches '-'
+"[^-a]"     ==&#62; matches characters except '-' and 'a'
+"[^]-~]"    ==&#62; matches characters except '-' through '~'
+"[a--]"     ==&#62; matches characters from 'a' through '-'
+"[abc-]"    ==&#62; matches 'a', 'b', 'c', or '-'
+"[[.-.]-~]" ==&#62; matches characters from '-' through '~'
+</PRE>
+
+<P>
+Within a bracket expression, a character-name element enclosed in
+<CODE>[.</CODE> and <CODE>.]</CODE> stands for the character that is represented by
+the name. For example, <CODE>[.backspace.]</CODE> stands for
+<CODE>#\U{0008}</CODE>. For a list of acceptable names of characters, see
+section <A HREF="ksm_11.html#SEC52">Character Names</A>. 
+
+
+<P>
+Within a bracket expression, the name of a <EM>character class</EM>
+enclosed in <CODE>[:</CODE> and <CODE>:]</CODE> stands for the list of all
+characters belonging to that class. Standard character class names are:
+
+
+<TABLE BORDER>
+
+<TR><TD></TD><TD> alnum </TD><TD> digit </TD><TD> punct</TD>
+
+</TR>
+<TR><TD></TD><TD> alpha </TD><TD> graph </TD><TD> space</TD>
+
+</TR>
+<TR><TD></TD><TD> blank </TD><TD> lower </TD><TD> upper</TD>
+
+</TR>
+<TR><TD></TD><TD> cntrl </TD><TD> print </TD><TD> xdigit</TD>
+
+</TR></TABLE>
+
+<P>
+These stand for the character classes defined in <CODE>ctype</CODE>(3). A
+character class may not be used as an endpoint of a range.
+
+
+<P>
+There are two special cases of bracket expressions: the bracket
+expression <CODE>[[:&#60;:]]</CODE> and <CODE>[[:&#62;:]]</CODE> match the null string at
+the beginning and end of a word respectively. A word is defined as a
+sequence of word characters which is neither preceded nor followed by
+word characters. A word character is an <CODE>alnum</CODE> character (as
+defined by <CODE>ctype</CODE>(3)) or an underscore.
+
+
+<P>
+In the event that a regular expression could match more than one
+substring of a given string, the regular expression matches the one
+starting earliest in the string. If the regular expression could match
+more than one substring starting at that point, it matches the
+longest. Subexpressions also match the longest possible substrings,
+subject to the constraint that the whole match be as long as possible,
+with subexpressions starting earlier in the regular expression taking
+priority over ones starting later. Match lengths are measured in
+characters. A null string is considered longer than no match at all.
+For example, <CODE>bb*</CODE> matches the three middle characters of
+<CODE>abbbc</CODE>, <CODE>(wee|week)(knights|nights)</CODE> matches all ten
+characters of <CODE>weeknights</CODE>, when <CODE>(.*).*</CODE> is matched against
+<CODE>abc</CODE> the prenthesized subexpression matches all three characters,
+and when <CODE>(a*)*</CODE> is matched against <CODE>bc</CODE> both the whole
+regular expression and the parenthesized subexpression match the null
+string.
+
+
+<P>
+If case-independent matching is specified, the effect is much as if all
+case distinctions had vanished from the alphabet. When an alphabetic
+that exists in multiple cases appears as an ordinary character outside a
+bracket expression, it is effectively transformed into a bracket
+expression containing both cases, e.g. <CODE>x</CODE> becomes
+<CODE>[xX]</CODE>. When it apperas inside a bracket expression, all case
+counterparts of it are added to the bracket expression, so that (e.g.)
+<CODE>[x]</CODE> becomes <CODE>[xX]</CODE> and <CODE>[^x]</CODE> becomes <CODE>[^xX]</CODE>.
+
+
+<P>
+A <EM>back reference</EM> atom that is represented by a <CODE>\</CODE> followed
+by a non-zero decimal digit <EM>d</EM> matches the same sequence of
+characters matched by the <EM>d</EM>-th parenthesized subexpression
+(numbering subexpressions by the positions of their opening parentheses,
+left to right), so that (e.g.) <CODE>([bc])\1</CODE> matches <CODE>bb</CODE> or
+<CODE>cc</CODE> but not <CODE>bc</CODE>.
+
+
+<P>
+NOTE: This description of regular expression is based on the
+documentation included in the regular expression library of Henry
+Spencer.
+
+
+
+
+<H2><A NAME="SEC51" HREF="ksm_toc.html#TOC51">Regex Procedures</A></H2>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>regex:regcomp</B> <I><VAR>pattern</VAR> &#38;key (ignore-case #f) (newline #f)</I>
+<DD><A NAME="IDX338"></A>
+(no-special #f)
+
+
+<P>
+<VAR>pattern</VAR> should be a string that specify a regular expression.
+Returns a regular expression object that is specified by <VAR>pattern</VAR>.
+
+
+<P>
+If <CODE>ignore-case</CODE> is not false, it specifies a matching that ignores
+upper/lower case distinctions.  
+
+
+<P>
+If <CODE>newline</CODE> is not false, it specifies a newline-sensitive
+matching. By default, newline is completely ordinary character with no
+special meaning in either regular expressions or strings. With this
+flag, <CODE>[^...]</CODE> bracket expressions and <CODE>.</CODE> never match
+newline. <CODE>^</CODE> matches the empty string immediately after a
+newline. <CODE>$</CODE> matches the empty string immediately before a
+newline. 
+
+
+<P>
+If <CODE>no-special</CODE> is not false, it specifies a matching with meanings
+of all special characters turned off. All characters are thus considered
+ordinary, so the regular expression is a literal string.
+
+
+<P>
+This procedure supports for Unicode characters as basic 16-bit logical
+units. Case-insensitive match supports for Unicode characters (beyond
+ASCII characters).
+
+
+
+<PRE>
+(define re (regex:regcomp "[a-z]+.scm"))
+(regex:regexec re "abc.scm") ==&#62; #t
+(regex:regexec re "Abc.scm") ==&#62; #f
+
+(define re (regex:regcomp "[a-z]+.scm" :ignore-case #t))
+(regex:regexec re "Abc.scm") ==&#62; #t
+
+(define re (regex:regcomp "[^0-9]+"))
+(regex:regexec re "abcd\nefg") ==&#62; #t
+(regex:subexpr re 0)           ==&#62; "abcd\nefg"
+(define re (regex:regcomp "[^0-9]+") :newline)
+(regex:regexec re "abcd\nefg") ==&#62; #t
+(regex:subexpr re 0)           ==&#62; "abcd"
+
+(define re (regex:regcomp ".+"))
+(regex:regexec re "abcd\nefg") ==&#62; #t
+(regex:subexpr re 0)           ==&#62; "abcd\nefg"
+(define re (regex:regcomp ".+") :newline)
+(regex:regexec re "abcd\nefg") ==&#62; #t
+(regex:subexpr re 0)           ==&#62; "abcd"
+
+(define re (regex:regcomp "^hello$"))
+(regex:regexec re "aaa\nhello\nbbb")  ==&#62; #f
+(define re (regex:regcomp "^hello$" :newline))
+(regex:regexec re "aaa\nhello\nbbb")  ==&#62; #t
+
+(define re (regex:regcomp ".+"))
+(regex:regexec re "abcd")             ==&#62; #f
+(regex:regexec re ".+")               ==&#62; #t
+</PRE>
+
+<P>
+In KSM-Scheme, several escape sequences in a string are processes while
+they are read from the program source. They are 
+
+
+
+<PRE>
+"\""      ==&#62; "  (a string composed of a doublequote character)
+"\\"      ==&#62; \
+"\n"      ==&#62; newline
+"\r"      ==&#62; carriage return
+"\t"      ==&#62; tab
+"\U{XXXX} ==&#62; character corresponding to Unicode 
+              code value XXXX (hexadecimal)
+</PRE>
+
+<P>
+Consequently, a string <CODE>"\n"</CODE> is converted to a string with one
+character (newline character) while it is read, and <CODE>(regex:regcomp
+"[\n]")</CODE> returns a regular expression object that matches a string
+containing a newline character.
+
+
+<P>
+A backslash in a string followed by other characters loses its special
+meaning and represents a backslash character by itself. Consequently,
+<CODE>(regex:regcomp "\$")</CODE>, as well as <CODE>(regex:regcomp "\\$")</CODE>,
+returns a regular expression object that matches a string containing a
+character '$'.
+
+
+<P>
+@source{regex/regex.c}
+@use{regex}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>regex:regexec</B> <I><VAR>regex</VAR> <VAR>string</VAR> &#38;key (not-bol #f) (not-eol</I>
+<DD><A NAME="IDX339"></A>
+#f))
+
+
+<P>
+Matches a regular expression object <VAR>regex</VAR> against <VAR>string</VAR>,
+and returns <CODE>#t</CODE> if matching succeeds or <CODE>#f</CODE> if matching
+fails. 
+
+
+<P>
+If <CODE>not-bol</CODE> is not false, the first character of <VAR>string</VAR> is
+not the beginning of a line, so the <CODE>^</CODE> anchor should not match
+before it. This does not affect the behavior of newlines when <VAR>regex</VAR>
+was created with <CODE>:newline #t</CODE>.
+
+
+<P>
+If <CODE>not-eol</CODE> is not false, termination of <VAR>string</VAR> does not end
+a line, so the `$' anchor should not match before it. This does not
+affect the behavior of newlines when <VAR>regex</VAR> was compiled with
+<CODE>:newline #t</CODE>.
+
+
+<P>
+This procedure supports for Unicode characters as basic 16-bit logical
+units. 
+
+
+
+<PRE>
+(define re (regex:regcomp "ab+c"))
+(regex:regexec re "abbbbbbbc")   ==&#62; #t
+(regex:regexec re "ac")          ==&#62; #f
+
+(define re (regex:regcomp "^hello"))
+(regex:regexec re "hello")          ==&#62; #t
+(regex:regexec re "hello" :not-bol) ==&#62; #f
+
+(define re (regex:regcomp "hello$"))
+(regex:regexec re "hello")          ==&#62; #t
+(regex:regexec re "hello" :not-eol) ==&#62; #f
+</PRE>
+
+<P>
+@source{regex/regex.c}
+@use{regex}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>regex:subexpr</B> <I><VAR>regex</VAR> <VAR>index</VAR></I>
+<DD><A NAME="IDX340"></A>
+Returns a string comprised of characters matched by the <VAR>index</VAR>-th
+parenthesized subexpression in <VAR>regex</VAR>. <VAR>regex</VAR> must be a
+regular expression object with which <CODE>regex:regexec</CODE> has been
+successfully conducted.
+
+
+<P>
+<VAR>index</VAR> of 1 indicates the first subexpression, <VAR>index</VAR> of 2
+indicates the second subexpression, and so on. <VAR>index</VAR> of 0
+indicates the whole substring that had been matched with <VAR>regex</VAR>.
+
+
+
+<PRE>
+(define re (regex:regcomp "(a+)(b+)"))
+(regex:regexec re "aaabbccc")  ==&#62; #t
+(regex:subexpr re 0)           ==&#62; "aaabb"
+(regex:subexpr re 1)           ==&#62; "aaa"
+(regex:subexpr re 2)           ==&#62; "bb"
+</PRE>
+
+</DL>
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>regex:split</B> <I><VAR>regex</VAR> <VAR>string</VAR></I>
+<DD><A NAME="IDX341"></A>
+
+
+<P>
+Splits <VAR>string</VAR> with delimiters that match <VAR>pattern</VAR>. Returns a
+list comprising of the substrings. 
+
+
+
+<PRE>
+(regex:split "abcdefg" (regex:regcomp "d")) 
+                   ==&#62; ("abc" "efg")
+(regex:split "123k234h345" (regex:regcomp "[a-z]")) 
+                   ==&#62; ("123" "234" "345")
+(regex:split "123abc234" (regex:regcomp "[a-z]+")) 
+                   ==&#62; ("123" "234")
+</PRE>
+
+<P>
+@source{regex/regex.c}
+@use{regex}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>regex:replace</B> <I>regex string generator &#38;key (not-bol #f) (not-eol</I>
+<DD><A NAME="IDX342"></A>
+#f) (count -1)
+
+
+<P>
+Returns a string which is created by replacing strings returned by
+<VAR>generator</VAR> for subexpression that match <VAR>regex</VAR> in
+<VAR>string</VAR>. <VAR>regex</VAR> should be a regular expression
+object. <VAR>generator</VAR> should be a function that takes one argument, a
+regular expression object, and returns a string.
+
+
+<P>
+<CODE>not-bol</CODE> and <CODE>not-eol</CODE> arguments have the same meanings as in
+<CODE>regex:regexec</CODE>. 
+
+
+<P>
+<CODE>count</CODE> specifies the number of replacements to be made. If
+<CODE>count</CODE> is -1, all matching subexpressions are replaced.
+
+
+
+<PRE>
+(regex:replace (regex:regcomp ":")
+               "abc:def:ghi"
+               (lambda (re) " "))
+  ==&#62; "abc def ghi"
+
+(regex:replace (regex:regcomp "([a-z])([a-z])")
+               "123ab234cd345ef"
+               (lambda (re)
+                 (string-append (regex:subexpr re 2)
+                                (regex:subexpr re 1))))
+  ==&#62; "123ba234dc345fe"
+
+(regex:replace (regex:regcomp "([0-9]+)X([0-9]+)")
+               "123X789A234X777B333X222" 
+               (lambda (reg) 
+                  (string-append 
+                    (regex:subexpr reg 2) 
+                    "X" 
+                    (regex:subexpr reg 1))) 
+               :count 2)
+  ==&#62; "789X123A777X234B333X222"
+</PRE>
+
+</DL>
+
+
+
+<H2><A NAME="SEC52" HREF="ksm_toc.html#TOC52">Character Names</A></H2>
+<TABLE BORDER>
+
+<TR><TD>NUL </TD><TD> 	'\0'</TD>
+
+</TR>
+<TR><TD>SOH </TD><TD> 	'\001'</TD>
+
+</TR>
+<TR><TD>STX </TD><TD> 	'\002'</TD>
+
+</TR>
+<TR><TD>ETX </TD><TD> 	'\003'</TD>
+
+</TR>
+<TR><TD>EOT </TD><TD> 	'\004'</TD>
+
+</TR>
+<TR><TD>ENQ </TD><TD> 	'\005'</TD>
+
+</TR>
+<TR><TD>ACK </TD><TD> 	'\006'</TD>
+
+</TR>
+<TR><TD>BEL </TD><TD> 	'\007'</TD>
+
+</TR>
+<TR><TD>alert </TD><TD> 	'\007'</TD>
+
+</TR>
+<TR><TD>BS </TD><TD> 		'\010'</TD>
+
+</TR>
+<TR><TD>backspace </TD><TD> 	'\b'</TD>
+
+</TR>
+<TR><TD>HT </TD><TD> 		'\011'</TD>
+
+</TR>
+<TR><TD>tab </TD><TD> 		'\t'</TD>
+
+</TR>
+<TR><TD>LF </TD><TD> 		'\012'</TD>
+
+</TR>
+<TR><TD>newline </TD><TD> 	'\n'</TD>
+
+</TR>
+<TR><TD>VT </TD><TD> 		'\013'</TD>
+
+</TR>
+<TR><TD>vertical-tab </TD><TD> 	'\v'</TD>
+
+</TR>
+<TR><TD>FF </TD><TD> 		'\014'</TD>
+
+</TR>
+<TR><TD>form-feed </TD><TD> 	'\f'</TD>
+
+</TR>
+<TR><TD>CR </TD><TD> 		'\015'</TD>
+
+</TR>
+<TR><TD>carriage-return </TD><TD> 	'\r'</TD>
+
+</TR>
+<TR><TD>SO </TD><TD> 	'\016'</TD>
+
+</TR>
+<TR><TD>SI </TD><TD> 	'\017'</TD>
+
+</TR>
+<TR><TD>DLE </TD><TD> 	'\020'</TD>
+
+</TR>
+<TR><TD>DC1 </TD><TD> 	'\021'</TD>
+
+</TR>
+<TR><TD>DC2 </TD><TD> 	'\022'</TD>
+
+</TR>
+<TR><TD>DC3 </TD><TD> 	'\023'</TD>
+
+</TR>
+<TR><TD>DC4 </TD><TD> 	'\024'</TD>
+
+</TR>
+<TR><TD>NAK </TD><TD> 	'\025'</TD>
+
+</TR>
+<TR><TD>SYN </TD><TD> 	'\026'</TD>
+
+</TR>
+<TR><TD>ETB </TD><TD> 	'\027'</TD>
+
+</TR>
+<TR><TD>CAN </TD><TD> 	'\030'</TD>
+
+</TR>
+<TR><TD>EM </TD><TD> 	'\031'</TD>
+
+</TR>
+<TR><TD>SUB </TD><TD> 	'\032'</TD>
+
+</TR>
+<TR><TD>ESC </TD><TD> 	'\033'</TD>
+
+</TR>
+<TR><TD>IS4 </TD><TD> 	'\034'</TD>
+
+</TR>
+<TR><TD>FS </TD><TD> 	'\034'</TD>
+
+</TR>
+<TR><TD>IS3 </TD><TD> 	'\035'</TD>
+
+</TR>
+<TR><TD>GS </TD><TD> 	'\035'</TD>
+
+</TR>
+<TR><TD>IS2 </TD><TD> 	'\036'</TD>
+
+</TR>
+<TR><TD>RS </TD><TD> 	'\036'</TD>
+
+</TR>
+<TR><TD>IS1 </TD><TD> 	'\037'</TD>
+
+</TR>
+<TR><TD>US </TD><TD> 	'\037'</TD>
+
+</TR>
+<TR><TD>space </TD><TD> 		' '</TD>
+
+</TR>
+<TR><TD>exclamation-mark </TD><TD> 	'!'</TD>
+
+</TR>
+<TR><TD>quotation-mark </TD><TD> 	'"'</TD>
+
+</TR>
+<TR><TD>number-sign </TD><TD> 		'#'</TD>
+
+</TR>
+<TR><TD>dollar-sign </TD><TD> 		'$'</TD>
+
+</TR>
+<TR><TD>percent-sign </TD><TD> 		'%'</TD>
+
+</TR>
+<TR><TD>ampersand </TD><TD> 		'&#38;'</TD>
+
+</TR>
+<TR><TD>apostrophe </TD><TD> 		'\"</TD>
+
+</TR>
+<TR><TD>left-parenthesis </TD><TD> 	'('</TD>
+
+</TR>
+<TR><TD>right-parenthesis </TD><TD> 	')'</TD>
+
+</TR>
+<TR><TD>asterisk </TD><TD> 	'*'</TD>
+
+</TR>
+<TR><TD>plus-sign </TD><TD> 	'+'</TD>
+
+</TR>
+<TR><TD>comma </TD><TD> 	','</TD>
+
+</TR>
+<TR><TD>hyphen </TD><TD> 	'-'</TD>
+
+</TR>
+<TR><TD>hyphen-minus </TD><TD> 	'-'</TD>
+
+</TR>
+<TR><TD>period </TD><TD> 	'.'</TD>
+
+</TR>
+<TR><TD>full-stop </TD><TD> 	'.'</TD>
+
+</TR>
+<TR><TD>slash </TD><TD> 	'/'</TD>
+
+</TR>
+<TR><TD>solidus </TD><TD> 	'/'</TD>
+
+</TR>
+<TR><TD>zero </TD><TD> 		'0'</TD>
+
+</TR>
+<TR><TD>one </TD><TD> 		'1'</TD>
+
+</TR>
+<TR><TD>two </TD><TD> 		'2'</TD>
+
+</TR>
+<TR><TD>three </TD><TD> 	'3'</TD>
+
+</TR>
+<TR><TD>four </TD><TD> 		'4'</TD>
+
+</TR>
+<TR><TD>five </TD><TD> 		'5'</TD>
+
+</TR>
+<TR><TD>six </TD><TD> 		'6'</TD>
+
+</TR>
+<TR><TD>seven </TD><TD> 	'7'</TD>
+
+</TR>
+<TR><TD>eight </TD><TD> 	'8'</TD>
+
+</TR>
+<TR><TD>nine </TD><TD> 		'9'</TD>
+
+</TR>
+<TR><TD>colon </TD><TD> 	':'</TD>
+
+</TR>
+<TR><TD>semicolon </TD><TD> 	';'</TD>
+
+</TR>
+<TR><TD>less-than-sign </TD><TD> 	'&#60;'</TD>
+
+</TR>
+<TR><TD>equals-sign </TD><TD> 		'='</TD>
+
+</TR>
+<TR><TD>greater-than-sign </TD><TD> 	'&#62;'</TD>
+
+</TR>
+<TR><TD>question-mark </TD><TD> 	'?'</TD>
+
+</TR>
+<TR><TD>commercial-at </TD><TD> 	''</TD>
+
+</TR>
+<TR><TD>left-square-bracket </TD><TD> 	'['</TD>
+
+</TR>
+<TR><TD>backslash </TD><TD> 		'\\'</TD>
+
+</TR>
+<TR><TD>reverse-solidus </TD><TD> 	'\\'</TD>
+
+</TR>
+<TR><TD>right-square-bracket </TD><TD> 	']'</TD>
+
+</TR>
+<TR><TD>circumflex </TD><TD> 		'^'</TD>
+
+</TR>
+<TR><TD>circumflex-accent </TD><TD> 	'^'</TD>
+
+</TR>
+<TR><TD>underscore </TD><TD> 		'_'</TD>
+
+</TR>
+<TR><TD>low-line </TD><TD> 		'_'</TD>
+
+</TR>
+<TR><TD>grave-accent </TD><TD> 		'`'</TD>
+
+</TR>
+<TR><TD>left-brace </TD><TD> 		'{'</TD>
+
+</TR>
+<TR><TD>left-curly-bracket </TD><TD> 	'{'</TD>
+
+</TR>
+<TR><TD>vertical-line </TD><TD> 	'|'</TD>
+
+</TR>
+<TR><TD>right-brace </TD><TD> 		'}'</TD>
+
+</TR>
+<TR><TD>right-curly-bracket </TD><TD> 	'}'</TD>
+
+</TR>
+<TR><TD>tilde </TD><TD> 		'~'</TD>
+
+</TR>
+<TR><TD>DEL </TD><TD> 	'\177'</TD>
+
+</TR></TABLE>
+
+<P><HR><P>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_10.html">previous</A>, <A HREF="ksm_12.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+</BODY>
+</HTML>

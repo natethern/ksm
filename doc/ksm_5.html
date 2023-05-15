@@ -1,0 +1,110 @@
+<HTML>
+<HEAD>
+<!-- Created by texi2html 1.56k from ksm.texi on 12 May 2001 -->
+
+<TITLE>KSM-Scheme Reference Manual - Lists</TITLE>
+</HEAD>
+<BODY>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_4.html">previous</A>, <A HREF="ksm_6.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+<P><HR><P>
+
+
+<H1><A NAME="SEC8" HREF="ksm_toc.html#TOC8">Lists</A></H1>
+
+<P>
+List is represented by a sequence of elements within parentheses. Each
+element is separated by space.
+
+
+
+<PRE>
+(1 2 3 4 5)
+(apple banana orange)
+(#\H #\e #\l #\l #\o)
+</PRE>
+
+<P>
+Evaluation of a list is conducted in two different ways depending on the
+first element in the list. When evaluation of the first element results
+in a function, remaining elements are evaluated and the function is
+called with those evaluated values as arguments. For example, the
+identifier <CODE>+</CODE> evaluates to a function that returns the sum of its
+arguments. 
+
+
+
+<PRE>
+(+ 1 2)             ==&#62; 3
+(+ 1 2 3 4)         ==&#62; 10
+(+ (+ 1 2) (+ 3 4)  ==&#62; 10
+</PRE>
+
+<P>
+In another form of evaluation, the first element represents an
+invocation of pre-defined special form. How the remaining elements are
+evaluated depends on the individual special forms. For example,
+<CODE>define</CODE> represents a special form that defines a variable. The first
+argument indicates the name of the variable, and the evaluation of the
+second argument specifies the value of the variable.
+
+
+
+<PRE>
+(define a (+ 10 20))
+</PRE>
+
+<P>
+Evaluation of the above form returns an unspecified value. As a side
+effect, it defines a variable named <CODE>a</CODE> whose value is 30.
+
+
+<P>
+In Scheme, lists are constructed from pairs. A pair is a record
+structure with two fields called the <EM>car</EM> and <EM>cdr</EM> fields
+(for historical reasons). A two-element list is a pair whose car is the
+first element and whose cdr is a pair whose car is the second element
+and whose cdr is the empty list. The empty list is a special object of
+its own and is represented by <CODE>()</CODE>.
+
+
+<P>
+The most general notation for Scheme pairs is the "dotted" notation
+<CODE>(c1 . c2)</CODE> where <CODE>c1</CODE> is the value of the car field and
+<CODE>c2</CODE> is the value of the cdr field. For example <CODE>(4 . 5)</CODE> is a
+pair whose car is <CODE>4</CODE> and whose cdr is <CODE>5</CODE>. For example,
+
+<PRE>
+(a b c d e)
+</PRE>
+
+<P>
+and
+
+<PRE>
+(a . (b . (c . (d . (e . ())))))
+</PRE>
+
+<P>
+are equivalent notations for a list of symbols.
+
+
+<P>
+A chain of pairs not ending in the empty list is called an
+<EM>improper list</EM>. The list and dotted notations can be combined to
+represent improper lists:
+
+<PRE>
+(a b c . d)
+</PRE>
+
+<P>
+is equivalent to
+
+<PRE>
+(a . (b . (c . d)))
+</PRE>
+
+<P><HR><P>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_4.html">previous</A>, <A HREF="ksm_6.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+</BODY>
+</HTML>

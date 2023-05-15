@@ -1,0 +1,775 @@
+<HTML>
+<HEAD>
+<!-- Created by texi2html 1.56k from ksm.texi on 12 May 2001 -->
+
+<TITLE>KSM-Scheme Reference Manual - C Package</TITLE>
+</HEAD>
+<BODY>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_9.html">previous</A>, <A HREF="ksm_11.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+<P><HR><P>
+
+
+<H1><A NAME="SEC46" HREF="ksm_toc.html#TOC46">C Package</A></H1>
+
+<P>
+C Package includes procedures and special forms that are used to
+interface with C functions and variables.
+
+
+<P>
+Before using functions and variables in C package, following function
+call should be made to dynamically load necessary library.
+
+
+
+<PRE>
+(use 'clang)
+</PRE>
+
+
+
+<H2><A NAME="SEC47" HREF="ksm_toc.html#TOC47">Type Representation</A></H2>
+<P>
+In order to interface with C functions/variables effectively, Scheme
+language should be able to represent types of C language. In KSM-Scheme,
+following rules of representation are used.
+
+
+<P>
+For simple types, there is a one-to-one relationship between C types and
+Scheme symbols.
+
+
+<TABLE BORDER>
+
+<TR><TD>&#60;C type&#62; </TD><TD> &#60;Scheme representation&#62;</TD>
+
+</TR>
+<TR><TD>int </TD><TD> int</TD>
+
+</TR>
+<TR><TD>signed int </TD><TD> signed-int</TD>
+
+</TR>
+<TR><TD>unsigned int </TD><TD> unsigned-int</TD>
+
+</TR>
+<TR><TD>char </TD><TD> char</TD>
+
+</TR>
+<TR><TD>signed char </TD><TD> signed-char</TD>
+
+</TR>
+<TR><TD>unsigned char </TD><TD> unsigned-char</TD>
+
+</TR>
+<TR><TD>short </TD><TD> short</TD>
+
+</TR>
+<TR><TD>signed short </TD><TD> signed-short</TD>
+
+</TR>
+<TR><TD>unsigned short </TD><TD> unsigned-short</TD>
+
+</TR>
+<TR><TD>long </TD><TD> long</TD>
+
+</TR>
+<TR><TD>signed long </TD><TD> signed-long</TD>
+
+</TR>
+<TR><TD>unsigned long </TD><TD> unsigned-long</TD>
+
+</TR>
+<TR><TD>double </TD><TD> double</TD>
+
+</TR>
+<TR><TD>float </TD><TD> float</TD>
+
+</TR>
+<TR><TD>void </TD><TD> void</TD>
+
+</TR></TABLE>
+
+<P>
+A pointer type is represented by a list whose first element represents
+the pointed type and second element is the symbol <CODE>*</CODE>.
+
+
+<TABLE BORDER>
+
+<TR><TD>&#60;C type&#62; </TD><TD> &#60;Scheme representation&#62;</TD>
+
+</TR>
+<TR><TD><VAR>type</VAR> * </TD><TD> (<VAR>type</VAR> *)</TD>
+
+</TR></TABLE>
+
+<P>
+For example,
+
+<PRE>
+int *    &#60;==&#62;  (int *)
+char *   &#60;==&#62;  (char *)
+char **  &#60;==&#62;  ((char *) *)
+</PRE>
+
+<P>
+An array type is represented by a list whose first element represents
+the type of the elements, second element is the symbol <CODE>[]</CODE>, and
+the last element is the number of elements in the array.
+
+
+<TABLE BORDER>
+
+<TR><TD>&#60;C type&#62; </TD><TD> &#60;Scheme representation&#62;</TD>
+
+</TR>
+<TR><TD><VAR>type</VAR> <VAR>symbol</VAR>[<VAR>size</VAR>] </TD><TD> (<VAR>type</VAR> [] <VAR>size</VAR>)</TD>
+
+</TR></TABLE>
+
+<P>
+For example,
+
+<PRE>
+int a[10]    &#60;==&#62; (int [] 10)
+char *s[6]   &#60;==&#62; ((char *) [] 6)
+char (*s)[6] &#60;==&#62; ((char [] 6) *)
+</PRE>
+
+<P>
+Structures and unions are represented as lists with the following form.
+
+
+<TABLE BORDER>
+
+<TR><TD>&#60;C type&#62; </TD><TD> &#60;Scheme representation&#62;</TD>
+
+</TR>
+<TR><TD>struct <VAR>struct-name</VAR></TD>
+
+</TD><TD> (struct <VAR>struct-name</VAR>)
+</TR>
+<TR><TD>struct [<VAR>struct-name</VAR>] { <VAR>type</VAR> <VAR>name</VAR> [<VAR>bits</VAR>];</TD>
+
+...}
+</TD><TD> (strcut [<VAR>struct-name</VAR>] ((<VAR>type</VAR> <VAR>name</VAR> [<VAR>bits</VAR>])
+...))
+</TR>
+<TR><TD>union <VAR>union-name</VAR></TD>
+
+</TD><TD> (union <VAR>union-name</VAR>)
+</TR>
+<TR><TD>union [<VAR>union-name</VAR>] { <VAR>type</VAR> <VAR>name</VAR> [<VAR>bits</VAR>];</TD>
+
+...}
+</TD><TD> (union [<VAR>union-name</VAR>] ((<VAR>type</VAR> <VAR>name</VAR> [<VAR>bits</VAR>]) ...))
+</TR></TABLE>
+
+<P>
+For example,
+
+<PRE>
+struct point {           (struct point
+  int x;            &#60;==&#62;   (int x)
+  int y; };                (int y))
+
+struct {                 (struct
+  char *name;       &#60;==&#62;   ((char *) name)
+  int   id; };             (int id))
+
+struct {                 (struct
+  int x;                   (int x)
+  int flag: 2;      &#60;==&#62;   (int flag 2)
+  int y; }                 (int y))
+
+union {                  (union
+  int ival;                (int ival)
+  double dval;      &#60;==&#62;   (double dval)
+  void *pval; }            ((void *) pval))
+</PRE>
+
+
+
+<H2><A NAME="SEC48" HREF="ksm_toc.html#TOC48">Functions and Special Forms</A></H2>
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>clang:sym</B> <I><VAR>type</VAR> <VAR>symbol</VAR></I>
+<DD><A NAME="IDX320"></A>
+<DT><U>Special Form:</U> <B>clang:sym</B> <I><VAR>ret-type</VAR> (<VAR>symbol</VAR> <VAR>type</VAR> ...)</I>
+<DD><A NAME="IDX321"></A>
+In the first form, <CODE>clang:sym</CODE> looks up a C variable whose name is
+<VAR>symbol</VAR> then returns a C object that binds the address of the C
+variable with <VAR>type</VAR>. In the second form, <CODE>clang:sym</CODE> looks up
+a C function whose name is <VAR>symbol</VAR> and returns a corresponding C
+object. The return type of the C function is specified by
+<VAR>ret-type</VAR>, and types of arguments are specified by
+<VAR>types</VAR>. See section <A HREF="ksm_10.html#SEC47">Type Representation</A>, for details about C
+type representation in KSM-Scheme.
+
+
+
+<PRE>
+$ cat src.c
+int a = 12;
+double b;
+char *c;
+int get_a(void) { return a; }
+int iadd(int a, int b) { return a+b; }
+$ gcc -c -fPIC src.c
+$ gcc -shared -o src.so src.o -lc
+$ ksm
+&#62; (use 'clang)
+&#62; (load-shared "./src.so")
+&#62; (clang:sym int a)        ==&#62; #&#60;C-object&#62;
+&#62; (clang:sym double b)     ==&#62; #&#60;C-object&#62;
+&#62; (clang:sym (char *) c)   ==&#62; #&#60;C-object&#62;
+&#62; (clang:sym int (get_a))  ==&#62; #&#60;C-object&#62;
+&#62; (define a (clang:sym int a))
+&#62; (define f (clang:sym int (get_a)))
+&#62; (define iadd (clang:sym int (iadd int int)))
+&#62; a                        ==&#62; 12
+&#62; (f)                      ==&#62; 12
+&#62; (iadd 60 2)              ==&#62; 62
+</PRE>
+
+<P>
+C object returned by <CODE>clang:sym</CODE> can be used to set the value of
+the C variable as follows.
+
+
+
+<PRE>
+$ cat src.c
+int a = 12;
+int get_a(void) { return a; }
+$ gcc -c -fPIC src.c
+$ gcc -shared -o src.so src.o -lc
+$ ksm
+&#62; (use 'clang)
+&#62; (load-shared "./src.so")
+&#62; (clang:sym int a)        ==&#62; #&#60;C-object&#62;
+&#62; (clang:sym int (get_a))  ==&#62; #&#60;C-object&#62;
+&#62; (define a (clang:sym int a))
+&#62; (define f (clang:sym int (get_a)))
+&#62; a                        ==&#62; 12
+&#62; (f)                      ==&#62; 12
+&#62; (set! a 123)             ==&#62; 123
+&#62; (f)                      ==&#62; 123
+</PRE>
+
+<P>
+@source{clang/clang.c}
+@use{clang}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>clang:*</B> <I><VAR>csym</VAR></I>
+<DD><A NAME="IDX322"></A>
+<VAR>csym</VAR> must be a C object whose type is a pointer. Returns the
+object pointed by <VAR>csym</VAR>.
+
+
+
+<PRE>
+$ cat src.c
+int ival = 1;
+int *ip = &#38;ival;
+int getval(void) { return ival; }
+$ gcc -c -fPIC src.c
+$ gcc -shared -o src.so src.o -lc
+$ ksm
+&#62; (use 'clang)
+&#62; (load-shared "./src.so")
+&#62; (define ip (clang:sym (int *) ip))
+&#62; (clang:* ip) ==&#62; 1
+</PRE>
+
+<P>
+<CODE>clang:*</CODE> can be used to set the value pointed by <VAR>cobject</VAR> as
+follows.
+
+
+
+<PRE>
+$ ksm
+&#62; (use 'clang)
+&#62; (load-shared "./src.so")
+&#62; (define f (clang:sym int (getval)))
+&#62; (f)                     ==&#62; 1
+&#62; (define ip (clang:sym (int *) ip))
+&#62; (clang:* ip)            ==&#62; 1
+&#62; (set! (clang:* ip) 12)
+&#62; (clang:* ip)            ==&#62; 12
+&#62; (f)                     ==&#62; 12
+</PRE>
+
+<P>
+@source{clang/clang.c}
+@use{clang}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>clang:[]</B> <I><VAR>csym</VAR> <VAR>index</VAR></I>
+<DD><A NAME="IDX323"></A>
+<VAR>csym</VAR> must be a C object whose type is array or
+pointer. <VAR>index</VAR> should be an integer.  Returns the value of
+<VAR>index</VAR>-th element of array <VAR>csym</VAR>.  "cobject" must have an
+array type.
+
+
+
+<PRE>
+$ cat src.c
+int a[3] = { 1, 2, 3 };
+$ gcc -c -fPIC src.c
+$ gcc -shared -o src.so src.o -lc
+$ ksm
+&#62; (use 'clang)
+&#62; (load-shared "./src.so")
+&#62; (define a (clang:sym (int [] 3) a))
+&#62; (clang:[] a 0) ==&#62; 1
+&#62; (clang:[] a 1) ==&#62; 2
+&#62; (clang:[] a 2) ==&#62; 3
+</PRE>
+
+<P>
+<CODE>clang:[]</CODE> can be used to set the value of array element as follows.
+
+
+
+<PRE>
+$ cat src.c
+int a[3] = { 1, 2, 3 };
+int f(void) { return a[0]; }
+$ gcc -c -fPIC src.c
+$ gcc -shared -o src.so src.o -lc
+$ ksm
+&#62; (define a (clang:sym (int [] 3) a))
+&#62; (define f (clang:sym int (f)))
+&#62; (f)            ==&#62; 1
+&#62; (clang:[] a 0) ==&#62; 1
+&#62; (set! (clang:[] a 0) 12)
+&#62; (clang:[] a 0) ==&#62; 12
+&#62; (f)            ==&#62; 12
+</PRE>
+
+<P>
+@source{clang/clang.c}
+@use{clang}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>clang:.</B> <I><VAR>csym</VAR> <VAR>field</VAR></I>
+<DD><A NAME="IDX324"></A>
+<VAR>csym</VAR> must be a C object whose type is struct or union.  Returns
+the value of <VAR>field</VAR> of <VAR>csym</VAR>. If there is no such <VAR>field</VAR>,
+an error is raised.
+
+
+
+<PRE>
+$ car src_a.so
+struct point {
+  int x;
+  int y;
+} pp = { 1, 2 };
+$ gcc -c -fPIC src_a.c
+$ gcc -shared -o src_a.so src_a.o -lc
+$ ksm
+&#62; (use 'clang)
+&#62; (load-shared "./src_a.so")
+&#62; (define pp (clang:sym (struct pp (int x) (int y)) pp))
+&#62; (clang:. pp 'x) ==&#62; 1
+&#62; (clang:. pp 'y) ==&#62; 2
+
+$ car src_b.c
+struct cpoint {
+  int x;
+  int colored: 1;
+  int y;
+} cp = { 10, 1, 20 };
+$ gcc -c -fPIC src_b.c
+$ gcc -shared -o src_b.so src_b.o -lc
+$ ksm
+&#62; (use 'clang)
+&#62; (load-shared "./src_b.so")
+&#62; (define cp 
+    (clang:sym (struct cp (int x) 
+                          (int colored 1) 
+                          (int y)) 
+                  cp))
+&#62; (clang:. pp 'x)        ==&#62; 10
+&#62; (clang:. pp 'colored)  ==&#62; -1
+&#62; (clang:. pp 'y)        ==&#62; 20
+</PRE>
+
+<P>
+<CODE>clang:.</CODE> can be used to set the value of <VAR>field</VAR> in
+<VAR>csym</VAR>, as follows.
+
+
+
+<PRE>
+$ car src_a.so
+struct point {
+  int x;
+  int y;
+} pp = { 1, 2 };
+int get_x(void) { return pp.x; }
+$ gcc -c -fPIC src_a.c
+$ gcc -shared -o src_a.so src_a.o -lc
+$ ksm
+&#62; (use 'clang)
+&#62; (load-shared "./src_a.so")
+&#62; (define pp (clang:sym (struct pp (int x) (int y)) pp))
+&#62; (define get-x (clang:sym int (get_x)))
+&#62; (get-x)         ==&#62; 1
+&#62; (set! (clang:. pp 'x) 100)
+&#62; (get-x)         ==&#62; 100
+
+$ car src_b.c
+struct cpoint {
+  int x;
+  int colored: 1;
+  int y;
+} cp = { 10, 1, 20 };
+int get_colored(void) { return cp.colored; }
+$ gcc -c -fPIC src_b.c
+$ gcc -shared -o src_b.so src_b.o -lc
+$ ksm
+&#62; (use 'clang)
+&#62; (load-shared "./src_b.so")
+&#62; (define cp (clang:sym (struct cp (int x) 
+                                   (int colored 1) 
+                                   (int y)) 
+                          cp))
+&#62; (define get-colored (clang:sym int (get_colored)))
+&#62; (get-colored)          ==&#62; -1
+&#62; (set! (clang:. cp 'colored) 0)
+&#62; (get-colored)          ==&#62; 0
+</PRE>
+
+<P>
+@source{clang/clang.c}
+@use{clang}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>clang:-&#62;</B> <I><VAR>csym</VAR> <VAR>field</VAR></I>
+<DD><A NAME="IDX325"></A>
+<VAR>csym</VAR> must be a C object whose type is a pointer to a structure.
+Returns the value of <VAR>field</VAR> in the structure pointed by <VAR>csym</VAR>.
+If there is no such a field, an error is raised.
+
+
+
+<PRE>
+$ cat src.c
+struct point {
+  int x;
+  int y;
+} pp = { 1, 2 };
+$ gcc -c -fPIC src.c
+$ gcc -shared -o src.so src.o -lc
+$ ksm
+&#62; (use 'clang)
+&#62; (load-shared "./src.so")
+&#62; (define p
+    (clang:&#38; (clang:sym (struct point (int x) (int y)) pp)))
+&#62; (clang:-&#62; p 'x) ==&#62; 1
+&#62; (clang:-&#62; p 'y) ==&#62; 2
+</PRE>
+
+
+<PRE>
+$ cat src.c
+struct point {
+  int x;
+  int y;
+} pp = { 1, 2 };
+int get_x(void) { return pp.x; }
+$ gcc -c -fPIC src.c
+$ gcc -shared -o src.so src.o -lc
+$ ksm
+&#62; (use 'clang)
+&#62; (load-shared "./src.so")
+&#62; (define p
+    (clang:&#38; (clang:sym (struct point (int x) (int y)) pp)))
+&#62; (define f (clang:sym int (get_x)))
+&#62; (f)                ==&#62; 1
+&#62; (set! (clang:-&#62; p 'x) 100)
+&#62; (f)                ==&#62; 100
+</PRE>
+
+<P>
+@source{clang/clang.c}
+@use{clang}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>clang:&#38;</B> <I><VAR>csym</VAR></I>
+<DD><A NAME="IDX326"></A>
+<VAR>csym</VAR> must be a C object.  Returns a C object corresponding to the
+address <VAR>csym</VAR>.
+
+
+
+<PRE>
+$ cat src.c
+int a = 12;
+int f(void) { return a; }
+$ gcc -c -fPIC src.c
+$ gcc -shared -o src.so src.o -lc
+$ ksm
+&#62; (use 'clang)
+&#62; (load-shared "./src.so")
+&#62; (define a (clang:sym int a))
+&#62; (define ip (clang:&#38; a))
+&#62; (clang:* ip)          ==&#62; 12
+&#62; (set! (clang:* ip) 123)
+&#62; a                     ==&#62; 123
+&#62; ((clang:sym int (f))) ==&#62; 123
+</PRE>
+
+<P>
+@source{clang/clang.c}
+@use{clang}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>clang:get-value</B> <I><VAR>csym</VAR></I>
+<DD><A NAME="IDX327"></A>
+<VAR>csym</VAR> must be a C object.  Converts <VAR>csym</VAR> to standard Scheme
+object according to the type of <VAR>csym</VAR>. If such a conversion is not
+possible, <VAR>csym</VAR> itself is returned.
+
+
+
+<PRE>
+$ cat src.c
+int a = 1; 
+char *f(void) { return "hello"; }
+$ gcc -c -fPIC src.c
+$ gcc -shared -o src.so src.o -lc
+$ ksm
+&#62; (use 'clang)
+&#62; (load-shared "./src.so")
+&#62; (define a (clang:sym int a))
+&#62; (define f (clang:sym (char *) (f)))
+&#62; a                        ==&#62; 1
+&#62; (number? a)              ==&#62; #f
+&#62; (number? (get-value a))  ==&#62; #t
+&#62; (f)                      ==&#62; #&#60;csym&#62;
+&#62; (get-value (f))          ==&#62; "hello"
+</PRE>
+
+<P>
+@source{clang/clang.c}
+@use{clang}
+
+
+<P>
+NOTE: Currently, C object whose type is <CODE>int</CODE>, <CODE>signed int</CODE>,
+<CODE>double</CODE>, or <CODE>char *</CODE> is converted a standard Scheme object.
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>clang:struct</B> <I><VAR>struct-name</VAR></I>
+<DD><A NAME="IDX328"></A>
+<DT><U>Special Form:</U> <B>clang:struct</B> <I>[<VAR>struct-name</VAR>] (<VAR>type</VAR> <VAR>field-name</VAR>) ...)</I>
+<DD><A NAME="IDX329"></A>
+<DT><U>Special Form:</U> <B>clang:union</B> <I><VAR>union-name</VAR></I>
+<DD><A NAME="IDX330"></A>
+<DT><U>Special Form:</U> <B>clang:union</B> <I>[<VAR>union-name</VAR>] (<VAR>type</VAR> <VAR>field-name</VAR>) ...)</I>
+<DD><A NAME="IDX331"></A>
+Declares a structure/union corresponding to a C structure/union. Returns
+an unspecified value. Syntax of these forms are the same with the syntax
+of Scheme representation of C structure/union, except that the first
+<CODE>struct</CODE>/<CODE>union</CODE> element in the list is replaced by
+<CODE>clang:struct</CODE>/<CODE>clang:union</CODE>. See section <A HREF="ksm_10.html#SEC47">Type Representation</A>, for details about C type representation in KSM-Scheme.
+
+
+
+<PRE>
+(clang:struct point (int x) (int y))
+(clang:sizeof (struct point))    ==&#62; 8
+</PRE>
+
+<P>
+It is an error to declare a different kind of structure/union under the
+name of the same <VAR>struct-name</VAR>.
+
+
+
+<PRE>
+$ ksm
+&#62; (clang:struct point (int x) (int y))
+&#62; (clang:struct point (double x) (double y)) ==&#62; #&#60;error&#62;
+&#62; (clang:struct point (int x) (int y))   ;; This is OK.
+&#62; (clang:struct point (int p) (int q))       ==&#62; #&#60;error&#62;
+</PRE>
+
+<P>
+Structure/union declarations without field definitions are allowed
+regardless whether field definitions are conducted elsewhere in the
+source or not.
+
+
+
+<PRE>
+$ ksm
+&#62; (clang:struct point)
+&#62; (clang:struct point (int x) (int y))  ;; This is OK.
+$ ksm
+&#62; (clang:struct point (int x) (int y))
+&#62; (clang:struct)      ;; This is also OK.
+</PRE>
+
+<P>
+@source{clang/clang.c}
+@use{clang}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>clang:typedef</B> <I><VAR>type</VAR> <VAR>symbol</VAR></I>
+<DD><A NAME="IDX332"></A>
+<DT><U>Special Form:</U> <B>clang:typedef</B> <I><VAR>type</VAR> (<VAR>symbol</VAR> <VAR>type</VAR> ...)</I>
+<DD><A NAME="IDX333"></A>
+Associates <VAR>symbol</VAR> with <VAR>type</VAR>, equivalent to `typedef' in C.
+Returns an unspecified value. See section <A HREF="ksm_10.html#SEC47">Type Representation</A>, for
+details about representation of C type in KSM-Scheme.
+
+
+
+<PRE>
+(clang:typedef int Integer)
+(clang:typedef (int *) int_ptr)
+(clang:typedef double Real)
+(clang:sizeof Integer)  ==&#62; 4
+(clang:sizeof int_ptr)  ==&#62; 4
+(clang:sizeof Real)     ==&#62; 8
+</PRE>
+
+<P>
+@source{clang/clang.c}
+@use{clang}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>clang:new</B> <I><VAR>type</VAR></I>
+<DD><A NAME="IDX334"></A>
+<VAR>type</VAR> must be a Scheme object that represents a C type.  Allocates
+a memory area (<CODE>malloc</CODE>-ed) with size of <VAR>type</VAR> and returns a C
+object corresponding to the memory area. This memory area is not
+automatically garbage collected, and it should be explicitly freed by
+<CODE>clang:dispose</CODE>. For details of representation of C type, see
+<CODE>clang:sym</CODE>.
+
+
+
+<PRE>
+&#62; (define a (clang:new int))
+&#62; (set! a 10)
+&#62; a ==&#62; 10
+&#62; (clang:dispose a)
+</PRE>
+
+<P>
+@source{clang/clang.c}
+@use{clang}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Function:</U> <B>clang:dispose</B> <I><VAR>csym</VAR></I>
+<DD><A NAME="IDX335"></A>
+<VAR>csym</VAR> must be a C object allocated by <CODE>clang:new</CODE>.  Frees the
+memory allocated to <VAR>csym</VAR>. Returns an unspecified value.
+
+
+
+<PRE>
+&#62; (define a (clang:new int))
+&#62; (set! a 10)
+&#62; a                 ==&#62; 10
+&#62; (clang:dispose a)
+</PRE>
+
+<P>
+@source{clang/clang.c}
+@use{clang}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>clang:sizeof</B> <I><VAR>type</VAR></I>
+<DD><A NAME="IDX336"></A>
+<VAR>type</VAR> must be a Scheme object that represents a C type.  Returns
+the byte-size of <VAR>type</VAR>. See section <A HREF="ksm_10.html#SEC47">Type Representation</A>, for
+details about C type representation in KSM-Scheme.
+
+
+
+<PRE>
+(clang:sizeof int)    ==&#62; 4
+(clang:sizeof double) ==&#62; 8
+(clang:sizeof (struct (int x) (int y)))    ==&#62; 8
+(clang:sizeof (struct (int x) (double y))) ==&#62; 16
+(clang:sizeof (int *)) ==&#62; 4
+</PRE>
+
+<P>
+@source{clang/clang.c}
+@use{clang}
+</DL>
+
+
+<P>
+<DL>
+<DT><U>Special Form:</U> <B>clang:align</B> <I><VAR>type</VAR></I>
+<DD><A NAME="IDX337"></A>
+<VAR>type</VAR> must be a Scheme object that represents a C type.  Returns
+the byte-alignment of <VAR>type</VAR>. For details of representation of C
+type, see <CODE>clang:sym</CODE>.
+
+
+
+<PRE>
+(clang:align int)                         ==&#62; 4
+(clang:align double)                      ==&#62; 8
+(clang:align (struct (int x) (double y))) ==&#62; 8
+</PRE>
+
+<P>
+@source{clang/clang.c}
+@use{clang}
+</DL>
+
+
+<P><HR><P>
+Go to the <A HREF="ksm_1.html">first</A>, <A HREF="ksm_9.html">previous</A>, <A HREF="ksm_11.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+</BODY>
+</HTML>

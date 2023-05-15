@@ -1,0 +1,97 @@
+<HTML>
+<HEAD>
+<!-- Created by texi2html 1.56k from ksm.texi on 12 May 2001 -->
+
+<TITLE>KSM-Scheme Reference Manual - Invoking KSM-Scheme</TITLE>
+</HEAD>
+<BODY>
+Go to the first, previous, <A HREF="ksm_2.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+<P><HR><P>
+
+
+<H1><A NAME="SEC1" HREF="ksm_toc.html#TOC1">Invoking KSM-Scheme</A></H1>
+
+<P>
+KSM-Scheme is invoked from the command line as
+
+
+
+<PRE>
+ksm [options] [file arg ...]
+</PRE>
+
+<P>
+Acceptable options are
+
+
+<TABLE BORDER>
+
+<TR><TD>-xl <VAR>file</VAR></TD>
+
+</TD><TD> load <VAR>file</VAR> before starting the interpreter
+
+</TR>
+<TR><TD>-xc <VAR>encoding</VAR></TD>
+
+</TD><TD> set the default encoding to <VAR>encoding</VAR>
+
+</TR>
+<TR><TD>-xh</TD>
+
+</TD><TD> display the help information
+</TR></TABLE>
+
+<P>
+If <VAR>encoding</VAR> is specified, input files (including standard input)
+are assumed to be encoding by <VAR>encoding</VAR> and they are automatically
+converted to UTF-8 encoding while reading the file. Output files
+(including standard output and standard error) are automatically
+converted to <VAR>encoding</VAR> from UTF-8 that is the internal encoding in
+KSM-Scheme.
+
+
+<P>
+For example, to use KSM-Scheme under the circumstances in which
+<CODE>kterm</CODE> with default encoding of EUC-JP is used, following
+invocation will provide the desirable interaction.
+
+
+
+<PRE>
+ksm -xc EUC-JP
+</PRE>
+
+<P>
+If <VAR>file</VAR> is specified, it should be the name of a Scheme source
+file. The KSM-Scheme interpreter loads the file and then terminates. If
+<VAR>file</VAR> is omitted, KSM-Scheme enters an interactive mode and accepts
+Scheme source from standard input. 
+
+
+<P>
+If <VAR>args</VAR> are specified, it is passed the <VAR>file</VAR> program as
+command line arguments. They can be accessed by <CODE>cmdline-args</CODE> from
+the program.
+
+
+
+<PRE>
+$ cat src.scm
+(display (cmdline-args))
+(newline)
+$ ksm src.scm a b c
+(src.scm a b c)
+</PRE>
+
+<P>
+When <CODE>ksm</CODE> is invoked, it initializes the internal state, loads the
+initialization file that is located in the KSM home directory (e.g.,
+<CODE>/usr/local/ksm/ksm-0.3.0</CODE>, loads the pre-load file that is
+specified by <CODE>-xl</CODE> option (if present), and loads the source file
+(if specified).
+
+
+<P><HR><P>
+Go to the first, previous, <A HREF="ksm_2.html">next</A>, <A HREF="ksm_17.html">last</A> section, <A HREF="ksm_toc.html">table of contents</A>.
+</BODY>
+</HTML>

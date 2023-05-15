@@ -1,0 +1,94 @@
+Installation
+============
+
+These are installation instructions for KSM-Scheme.
+
+1. Extract archive. Following command will create a directory `ksm-0.3.1'
+   which contains source code.
+
+   $ tar -xzvf ksm-0.3.1.tar.gz
+
+2. `cd' to `ksm-0.3.1'
+
+   $ cd ksm-0.3.1
+
+3. Do configuration
+
+   $ ./configure
+   
+   By default, necessary files are installed in /usr/local/ksm
+   directory, executable `ksm' is installed in /usr/local/bin, man
+   file is installed in /usr/local/man, and info files are installed
+   in /usr/local/info.
+   
+   If these defaults are not desirable (for example, all files
+   are to be installed in the user's home directory), following
+   options to ./configure can be used.
+
+   $ ./configure --prefix=/home/hangil
+
+   With this option (--prefix), necessary files are installed in 
+   /home/hangil/ksm, executable in /home/hangil/bin, and info
+   files in /home/hangil/info
+
+   $ ./configure --prefix=/home/hangil --bindir=/usr/bin
+
+   With this option (--prefix and --bindir), necessary files
+   are installed in /home/hangil/ksm, executable int /usr/bin, 
+   and info files in /home/hangil/info
+
+   $ ./configure --prefix=/home/hangil --bindir=/usr/bin --infodir=/usr/info
+
+   With this option (--prefix and --bindir), necessary files
+   are installed in /home/hangil/ksm, executable int /usr/bin, 
+   and info files in /usr/info
+
+   $ ./configure --mandir=/usr/man
+
+   man file is installed in /usr/man
+
+4. Do make
+
+   $ make
+
+5. Do install
+
+   $ install
+
+Depending on the circumstances, PATH or INFOPATH environment variables
+may be adjusted. For example, if the directory under which executable 
+`ksm' is installed is not included in PATH, 
+
+   $ export PATH=/home/hangil/bin:$PATH
+
+If the directory under which info files are installed cannot be
+accessed by `info' command,
+
+   $ export INFOPATH=/home/hangil/info:$INFOPATH
+
+In the distribution, sample Scheme programs are included ("r5rs.scm"
+and "pi.scm") under the ksm-0.3.0 directory. "pi.scm" is from SCM
+Scheme ditribution. It uses bignum features of KSM-SCheme, which is
+available only under the system that has GMP library. If the system
+does not have GMP library, `(load "pi.scm")' will raise an error.
+  
+   $ ksm 
+   > (load "r5rs.scm")
+   ...
+   > (load "pi.scm")
+   #<unspecified>
+   > (pi 1000)
+   3.
+   1415926535 ...
+
+
+Supported Platforms
+===================
+
+Linux under PowerPC or Intel x86 architectures
+
+Reporting Bugs
+==============
+
+Hangil Chang <hchang-tky@umin.ac.jp>
+
